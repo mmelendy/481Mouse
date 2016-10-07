@@ -66,11 +66,13 @@ def main(argv):
             hsv=cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
             mask = cv2.inRange(hsv,rangelow, rangehigh)
-            hsv_res = cv2.bitwise_and(hsv,hsv, mask =mask)
+            hsv_mask = cv2.bitwise_and(hsv,hsv, mask =mask)
 
             #convert back to HSV so it shows up all normal like
-            hsv_res=cv2.cvtColor(hsv_res, cv2.COLOR_HSV2BGR)
+            hsv_res=cv2.cvtColor(hsv_mask, cv2.COLOR_HSV2BGR)
             cv2.imshow("hsv", hsv_res)
+
+            cv2.imshow("Real_HSV", hsv_mask)
 
         else:
             mask = cv2.inRange(frame,rangelow,rangehigh)

@@ -5,19 +5,19 @@ import numpy as np
 
 def main(argv): 
     #capture from camera at location 0
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
 
-    get_camera_values()
+    get_camera_values(cap)
         
     while True:
         ret, img = cap.read()
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-        #lower_blue = np.array([110,50,50])
-        #upper_blue = np.array([130,255,255])
+        lower_blue = np.array([110,50,50])
+        upper_blue = np.array([130,255,255])
 
-        lower_hand = np.array([])
-        upper_hand = np.array([])
+        #lower_hand = np.array([])
+        #upper_hand = np.array([])
 
         mask = cv2.inRange(hsv, lower_blue, upper_blue)
 
@@ -25,7 +25,7 @@ def main(argv):
         
         cv2.imshow("input", img)
         cv2.imshow("mask", mask)
-        #cv2.imshow("res", res)
+        cv2.imshow("res", res)
         
         key = cv2.waitKey(10) & 0xFF
         if key == 27:
@@ -54,7 +54,7 @@ def main(argv):
 #   16 CV_CAP_PROP_CONVERT_RGB Boolean flags indicating whether images should be converted to RGB.
 #   17 CV_CAP_PROP_WHITE_BALANCE Currently unsupported
 #   18 CV_CAP_PROP_RECTIFICATION Rectification flag for stereo cameras (note: only supported by DC1394 v 2.x backend currently)
-def get_camera_values():
+def get_camera_values(cap):
     # Change the camera setting using the set() function
     # cap.set(cv2.cv.CV_CAP_PROP_EXPOSURE, -6.0)
     # cap.set(cv2.cv.CV_CAP_PROP_GAIN, 4.0)
