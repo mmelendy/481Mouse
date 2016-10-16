@@ -1,68 +1,81 @@
 import cv2
 import sys
+import argparse
+import colors
 import numpy as np
-
+from collections import deque
 
 def main(argv): 
     #capture from camera at location 0
     cap = cv2.VideoCapture(0)
+    kernel = np.ones((5,5),np.uint8)
+    #get_camera_values(cap)
 
-    get_camera_values(cap)
-        
+    parser = argparse.ArgumentParser(description='HSV Color Space of a Single Color')
+    parser.add_argument("color", help="choose common color to start, bad color defaults blue")
+    parser.add_argument("--circle", "-c", help="draw circle around object", action="store_true")
+    args = parser.parse_args()
+    color = set_color(args.color)
+    #dont use red yet
+
+    pts = deque(maxlen=32)
+    counter = 0
+    (dx,dy) = (0,0)
+    
     while True:
         ret, img = cap.read()
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-
-        lower_blue = np.array([110,50,50])
-        upper_blue = np.array([130,255,255])
-
-        #lower_hand = np.array([])
-        #upper_hand = np.array([])
-
-        mask = cv2.inRange(hsv, lower_blue, upper_blue)
+        
+        mask = cv2.inRange(hsv, color[0], color[1])
 
         res = cv2.bitwise_and(img, img, mask= mask)
+
+        opening = cv2.morphologyEx(res, cv2.MORPH_OPEN, kernel)
+        #erosion = cv2.erode(mask,kernel,iterations = 2)
+        #ero_dil = cv2.dilate(erosion,kernel,iterations = 3)
+        ero_dil = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+
+
+        contours = cv2.findContours(ero_dil.copy(), cv2.RETR_EXTERNAL,
+                                     cv2.CHAIN_APPROX_SIMPLE)[-2]
         
-        cv2.imshow("input", img)
-        cv2.imshow("mask", mask)
-        cv2.imshow("res", res)
-        
-        key = cv2.waitKey(10) & 0xFF
-        if key == 27:
+        #cv2.imshow("opening", opening)
+        #cv2.imshow("input", img)
+        #cv2.imshow("mask", mask)
+        cv2.imshow("erosion and dilation", ero_dil)
+        #cv2.imshow("res " + args.color, res)
+
+        if len(contours) > 0:
+            max_con = max(contours, key=cv2.contourArea)
+            ((x,y), radius) = cv2.minEnclosingCircle(max_con)
+            moments = cv2.moments(max_con)
+            center = (int(moments["m10"] / moments["m00"]),
+                      int(moments["m01"] / moments["m00"]))
+
+            #draw circle around image
+            if radius > 10 and args.circle:
+                cv2.circle(img, (int(x), int(y)), int(radius), (255,0,0), 2)
+                cv2.circle(img, center, 5,(0,0,255), -1)
+                pts.appendleft(center)
+
+
+        #for i in np.arange(1, len(pts)):
+            #if there are no tracked points
+        #    if pts[i - 1] is None or pts[i] is None:
+        #        continue
+            
+            
+        cv2.imshow("input",img)
+             
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord("q"):
             break
 
     cv2.destroyAllWindows()
     cv2.VideoCapture(0).release()
 
 
-#   0  CV_CAP_PROP_POS_MSEC Current position of the video file in milliseconds.
-#   1  CV_CAP_PROP_POS_FRAMES 0-based index of the frame to be decoded/captured next.
-#   2  CV_CAP_PROP_POS_AVI_RATIO Relative position of the video file
-#   3  CV_CAP_PROP_FRAME_WIDTH Width of the frames in the video stream.
-#   4  CV_CAP_PROP_FRAME_HEIGHT Height of the frames in the video stream.
-#   5  CV_CAP_PROP_FPS Frame rate.
-#   6  CV_CAP_PROP_FOURCC 4-character code of codec.
-#   7  CV_CAP_PROP_FRAME_COUNT Number of frames in the video file.
-#   8  CV_CAP_PROP_FORMAT Format of the Mat objects returned by retrieve() .
-#   9 CV_CAP_PROP_MODE Backend-specific value indicating the current capture mode.
-#   10 CV_CAP_PROP_BRIGHTNESS Brightness of the image (only for cameras).
-#   11 CV_CAP_PROP_CONTRAST Contrast of the image (only for cameras).
-#   12 CV_CAP_PROP_SATURATION Saturation of the image (only for cameras).
-#   13 CV_CAP_PROP_HUE Hue of the image (only for cameras).
-#   14 CV_CAP_PROP_GAIN Gain of the image (only for cameras).
-#   15 CV_CAP_PROP_EXPOSURE Exposure (only for cameras).
-#   16 CV_CAP_PROP_CONVERT_RGB Boolean flags indicating whether images should be converted to RGB.
-#   17 CV_CAP_PROP_WHITE_BALANCE Currently unsupported
-#   18 CV_CAP_PROP_RECTIFICATION Rectification flag for stereo cameras (note: only supported by DC1394 v 2.x backend currently)
 def get_camera_values(cap):
-    # Change the camera setting using the set() function
-    # cap.set(cv2.cv.CV_CAP_PROP_EXPOSURE, -6.0)
-    # cap.set(cv2.cv.CV_CAP_PROP_GAIN, 4.0)
-    # cap.set(cv2.cv.CV_CAP_PROP_BRIGHTNESS, 144.0)
-    # cap.set(cv2.cv.CV_CAP_PROP_CONTRAST, 27.0)
-    # cap.set(cv2.cv.CV_CAP_PROP_HUE, 13.0) # 13.0
-    # cap.set(cv2.cv.CV_CAP_PROP_SATURATION, 28.0)
-    # Read the current setting from the camera
     test = cap.get(cv2.cv.CV_CAP_PROP_POS_MSEC)
     ratio = cap.get(cv2.cv.CV_CAP_PROP_POS_AVI_RATIO)
     frame_rate = cap.get(cv2.cv.CV_CAP_PROP_FPS)
@@ -86,6 +99,9 @@ def get_camera_values(cap):
     print("Gain: ", gain)
     print("Exposure: ", exposure)
     sys.stdout.flush()
+
+def set_color(color):
+    return colors.color_dict.get(color,colors.hsv_blue)
 
 if __name__ == '__main__':
     main(sys.argv)
