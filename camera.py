@@ -8,7 +8,7 @@ from pymouse import PyMouse
 
 def main(argv): 
     #capture from camera at location 0
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     kernel = np.ones((5,5),np.uint8)
     get_camera_values(cap)
 
@@ -27,8 +27,8 @@ def main(argv):
 
     mouse = PyMouse()
     screen_size = mouse.screen_size()
-    screen_ratio = (float(screen_size[0] / cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)),
-                    float(screen_size[1] / cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)))
+    screen_ratio = (float(screen_size[0] / cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
+                    float(screen_size[1] / cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
     #sys.stdout.flush()
     
@@ -89,17 +89,17 @@ def main(argv):
 
 
 def get_camera_values(cap):
-    test = cap.get(cv2.cv.CV_CAP_PROP_POS_MSEC)
-    ratio = cap.get(cv2.cv.CV_CAP_PROP_POS_AVI_RATIO)
-    frame_rate = cap.get(cv2.cv.CV_CAP_PROP_FPS)
-    width = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
-    height = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
-    brightness = cap.get(cv2.cv.CV_CAP_PROP_BRIGHTNESS)
-    contrast = cap.get(cv2.cv.CV_CAP_PROP_CONTRAST)
-    saturation = cap.get(cv2.cv.CV_CAP_PROP_SATURATION)
-    hue = cap.get(cv2.cv.CV_CAP_PROP_HUE)
-    gain = cap.get(cv2.cv.CV_CAP_PROP_GAIN)
-    exposure = cap.get(cv2.cv.CV_CAP_PROP_EXPOSURE)
+    test = cap.get(cv2.CAP_PROP_POS_MSEC)
+    ratio = cap.get(cv2.CAP_PROP_POS_AVI_RATIO)
+    frame_rate = cap.get(cv2.CAP_PROP_FPS)
+    width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+    height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    brightness = cap.get(cv2.CAP_PROP_BRIGHTNESS)
+    contrast = cap.get(cv2.CAP_PROP_CONTRAST)
+    saturation = cap.get(cv2.CAP_PROP_SATURATION)
+    hue = cap.get(cv2.CAP_PROP_HUE)
+    gain = cap.get(cv2.CAP_PROP_GAIN)
+    exposure = cap.get(cv2.CAP_PROP_EXPOSURE)
     print("Test: ", test)
     print("Ratio: ", ratio)
     print("Frame Rate: ", frame_rate)
