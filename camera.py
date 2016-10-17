@@ -4,12 +4,13 @@ import argparse
 import colors
 import numpy as np
 from collections import deque
+from pymouse import PyMouse
 
 def main(argv): 
     #capture from camera at location 0
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     kernel = np.ones((5,5),np.uint8)
-    #get_camera_values(cap)
+    get_camera_values(cap)
 
     parser = argparse.ArgumentParser(description='HSV Color Space of a Single Color')
     parser.add_argument("color", help="choose common color to start, bad color defaults blue")
@@ -18,9 +19,18 @@ def main(argv):
     color = set_color(args.color)
     #dont use red yet
 
+    #cap.set(3, 1280)
+    #cap.set(4,720)
+    
     pts = deque(maxlen=32)
     counter = 0
-    (dx,dy) = (0,0)
+
+    mouse = PyMouse()
+    screen_size = mouse.screen_size()
+    screen_ratio = (float(screen_size[0] / cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)),
+                    float(screen_size[1] / cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)))
+
+    #sys.stdout.flush()
     
     while True:
         ret, img = cap.read()
@@ -39,12 +49,6 @@ def main(argv):
         contours = cv2.findContours(ero_dil.copy(), cv2.RETR_EXTERNAL,
                                      cv2.CHAIN_APPROX_SIMPLE)[-2]
         
-        #cv2.imshow("opening", opening)
-        #cv2.imshow("input", img)
-        #cv2.imshow("mask", mask)
-        cv2.imshow("erosion and dilation", ero_dil)
-        #cv2.imshow("res " + args.color, res)
-
         if len(contours) > 0:
             max_con = max(contours, key=cv2.contourArea)
             ((x,y), radius) = cv2.minEnclosingCircle(max_con)
@@ -58,14 +62,23 @@ def main(argv):
                 cv2.circle(img, center, 5,(0,0,255), -1)
                 pts.appendleft(center)
 
+            #mouse movement
+            #print "Width ", screen_ratio[0] * center[0]
+            #print "Height ", screen_ratio[1] * center[1]
+            width = abs(int(screen_ratio[0] * center[0]) - screen_size[0])
+            height = int(screen_ratio[1] * center[1])
+            mouse.move(width, height) 
+               
+            
+        cv2.imshow("input", img)
 
-        #for i in np.arange(1, len(pts)):
-            #if there are no tracked points
-        #    if pts[i - 1] is None or pts[i] is None:
-        #        continue
-            
-            
-        cv2.imshow("input",img)
+        #cv2.imshow("opening", opening)
+        #cv2.imshow("input", img)
+        #cv2.imshow("mask", mask)
+        #cv2.imshow("erosion and dilation", ero_dil)
+        #cv2.imshow("res " + args.color, res)
+
+        counter += 1
              
         key = cv2.waitKey(1) & 0xFF
         if key == ord("q"):
