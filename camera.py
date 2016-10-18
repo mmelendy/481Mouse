@@ -1,14 +1,15 @@
 import cv2
 import sys
 import argparse
-import colors
 import numpy as np
 from collections import deque
-from pymouse import PyMouse
+
+import colors
+from mouse import BasicController
 
 def main(argv): 
     
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     kernel = np.ones((5,5),np.uint8)
     #get_camera_values(cap)
 
@@ -21,11 +22,10 @@ def main(argv):
     
     pts = deque(maxlen=32)
 
-    mouse = PyMouse()
-    screen_size = mouse.screen_size()
-    screen_ratio = (float(screen_size[0] / cap.get(3)),
-                    float(screen_size[1] / cap.get(4)))
-    
+    frame_width = cap.get(3)
+    frame_height = cap.get(4)
+    mouse = BasicController()
+
     if args.bars:
         cv2.namedWindow("mask")
         cv2.createTrackbar("Erosion", "mask", 0, 10, nothing)
@@ -37,10 +37,11 @@ def main(argv):
     while True:
         ret, img = cap.read()
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-     
-        #red special scase
-        if args.color != 'red': 
+
+        if args.color != 'red':
             mask = cv2.inRange(hsv, color[0], color[1])
+
+        #red special case
         else:
             mask0 = cv2.inRange(hsv, color[0][0], color[0][1])
             mask1 = cv2.inRange(hsv, color[1][0], color[1][1])
@@ -53,7 +54,7 @@ def main(argv):
                 ero_it = 1
             dil_it = cv2.getTrackbarPos("Dilation", "mask")
             if dil_it == 0:
-                dil_it = 1            
+                dil_it = 1
 
         #opening = cv2.morphologyEx(res, cv2.MORPH_OPEN, kernel)
         erode = cv2.erode(mask,kernel,iterations = ero_it)
@@ -79,11 +80,10 @@ def main(argv):
                 pts.appendleft(center)
 
             #mouse movement
-            width = abs(int(screen_ratio[0] * center[0]) - screen_size[0])
-            height = int(screen_ratio[1] * center[1])
-            mouse.move(width, height) 
-               
-            
+            x = center[0] / frame_width
+            y = center[1] / frame_height
+            mouse.move(x, y)
+
         cv2.imshow("input", img)
 
         #list of various views
@@ -94,7 +94,7 @@ def main(argv):
         #cv2.imshow("erosion and dilation", morph)
         #res = cv2.bitwise_and(img, img, mask= mask)
         #cv2.imshow("res " + args.color, res)
-             
+
         key = cv2.waitKey(1) & 0xFF
         if key == ord("q"):
             break
