@@ -25,7 +25,7 @@ def main(argv):
     frame_width = cap.get(3)
     frame_height = cap.get(4)
     mouse = BasicController()
-    mouse.margin = 0.1
+    mouse.margin = (0.1, 0.3, 0.15, 0.15)
 
     if args.bars:
         cv2.namedWindow("mask")
