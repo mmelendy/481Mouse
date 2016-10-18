@@ -13,7 +13,7 @@ class BasicController(MouseController):
     def __init__(self):
         self.mouse = PyMouse()
         self.width, self.height = self.mouse.screen_size()
-        self.margin = 0.1
+        self.margin = 0.0
 
     # The margin is the proportion of camera space that maps beyond the edge
     # of the computer screen. With a margin of 0.1, moving your hand anywhere
