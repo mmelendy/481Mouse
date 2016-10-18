@@ -12,7 +12,7 @@ hsv_green = [np.array([50,50,50]), np.array([70,255,255])]
 
 hsv_blue = [np.array([110,50,50]), np.array([130,255,255])]
 
-hsv_cyan = [np.array([78,50,50]), np.array([116,255,255])]
+hsv_cyan = [np.array([80,50,50]), np.array([110,255,255])]
 
 color_dict = {
         'red' : [hsv_red_l, hsv_red_h],
