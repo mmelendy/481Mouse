@@ -5,6 +5,7 @@ import numpy as np
 from collections import deque
 
 import colors
+from interface import ColorApp
 from mouse import BasicController
 
 def main(argv): 
@@ -14,12 +15,20 @@ def main(argv):
     #get_camera_values(cap)
 
     parser = argparse.ArgumentParser(description='HSV Color Space of a Single Color')
-    parser.add_argument("color", help="choose common color to start, bad color defaults blue")
+    #parser.add_argument("color", help="choose common color to start, bad color defaults blue")
     parser.add_argument("--circle", "-c", help="draw circle around object", action="store_true")
     parser.add_argument("--bars", "-b", help="add trackbars for erosion and dilation", action="store_true")
     args = parser.parse_args()
-    color = set_color(args.color)
+    #color = set_color(args.color)
     
+
+    #app = ColorApp()
+    #app.MainLoop()
+
+
+    print app.frame.curr_color
+    sys.stdout.flush()
+
     pts = deque(maxlen=32)
 
     frame_width = cap.get(3)
@@ -39,6 +48,7 @@ def main(argv):
         ret, img = cap.read()
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
+        #if 
         if args.color != 'red':
             mask = cv2.inRange(hsv, color[0], color[1])
 
