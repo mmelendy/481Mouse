@@ -3,7 +3,7 @@ import sys
 import argparse
 import numpy as np
 from collections import deque
-import threading
+import thread
 
 import colors
 from interface import ColorApp
@@ -11,24 +11,42 @@ from mouse import BasicController
 
 def main(argv): 
     
-    cap = cv2.VideoCapture(0)
-    kernel = np.ones((5,5),np.uint8)
     #get_camera_values(cap)
 
     parser = argparse.ArgumentParser(description='HSV Color Space of a Single Color')
-    parser.add_argument("color", help="choose common color to start, bad color defaults blue")
+    #parser.add_argument("color", help="choose common color to start, bad color defaults blue")
     parser.add_argument("--circle", "-c", help="draw circle around object", action="store_true")
     parser.add_argument("--bars", "-b", help="add trackbars for erosion and dilation", action="store_true")
     args = parser.parse_args()
-    color = set_color(args.color)
+
     
 
-    #app = ColorApp()
-    #app.MainLoop()
+    try:
+        app = ColorApp()
+        #thread.start_new_thread(processing, (app, args))
+        #thread.start_new_thread(app.MainLoop(), ())
+        app.start()
+        #while True:
+        #    print app.frame.curr_color
+        #    sys.stdout.flush()
+        #while not app.frame.curr_color:
+            
+    except Exception as inst:
+        print "Unexpected Error:, ", sys.exc_info()[0]
+        print type(inst)
+        print inst.args
+        print inst
 
 
-    print app.frame.curr_color
-    sys.stdout.flush()
+    
+def processing(app, args):
+    
+    while not app.frame.curr_color:
+        pass
+
+    cap = cv2.VideoCapture(0)
+    kernel = np.ones((5,5),np.uint8)
+
 
     pts = deque(maxlen=32)
 
@@ -42,6 +60,7 @@ def main(argv):
         cv2.createTrackbar("Erosion", "mask", 0, 10, nothing)
         cv2.createTrackbar("Dilation", "mask", 0, 10, nothing)
 
+
     ero_it = 2
     dil_it = 3
 
@@ -49,7 +68,8 @@ def main(argv):
         ret, img = cap.read()
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-        if args.color != 'red':
+        #if args.color != 'red':
+        if app.frame.curr_color != 'red':
             mask = cv2.inRange(hsv, color[0], color[1])
 
         #red special case
@@ -112,6 +132,7 @@ def main(argv):
 
     cv2.destroyAllWindows()
     cv2.VideoCapture(0).release()
+ 
 
 
 def get_camera_values(cap):

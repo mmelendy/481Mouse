@@ -1,6 +1,7 @@
 import wx
 import sys
 import colors
+import threading
 
 class ColorFrame(wx.Frame):
 	def __init__(self):
@@ -8,7 +9,7 @@ class ColorFrame(wx.Frame):
 		self._panel = wx.Panel(self)
 		self._box = wx.BoxSizer(wx.VERTICAL)
 		
-		self._curr_color = 'blank'
+		self._curr_color = ''
 		
 		self.createDisplay()	
 
@@ -44,16 +45,25 @@ class ColorFrame(wx.Frame):
 	def OnClicked(self, event):
 		id = event.GetEventObject().GetId()
 		self._curr_color = colors.color_list[id] 
+		print self._curr_color
+		sys.stdout.flush()
 		#c = colors.color_list[id]
 		#self.curr_color(c)
 
-class ColorApp(wx.App):
+class ColorContainer(wx.App):
 	def OnInit(self):
 		# Create an instance of our customized Frame class
 		self.frame = ColorFrame()
 		self.frame.Show(True)
 		return True
 
+class ColorApp(threading.Thread):
+	def __init__(self):
+		threading.Thread.__init__(self)
+		self.app = ColorContainer()
+
+	def run(self):
+		self.app.MainLoop()
 
 
 #app = ColorApp()
