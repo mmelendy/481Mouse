@@ -2,6 +2,7 @@ import cv2
 import sys
 import argparse
 import numpy as np
+import math
 from collections import deque
 
 import colors
@@ -15,18 +16,18 @@ def main(argv):
     #get_camera_values(cap)
 
     parser = argparse.ArgumentParser(description='HSV Color Space of a Single Color')
-    #parser.add_argument("color", help="choose common color to start, bad color defaults blue")
+    parser.add_argument("color", help="choose common color to start, bad color defaults blue")
     parser.add_argument("--circle", "-c", help="draw circle around object", action="store_true")
     parser.add_argument("--bars", "-b", help="add trackbars for erosion and dilation", action="store_true")
     args = parser.parse_args()
-    #color = set_color(args.color)
+    color = set_color(args.color)
     
 
     #app = ColorApp()
     #app.MainLoop()
 
 
-    print app.frame.curr_color
+    # print app.frame.curr_color
     sys.stdout.flush()
 
     pts = deque(maxlen=32)
@@ -75,6 +76,7 @@ def main(argv):
         contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
                                      cv2.CHAIN_APPROX_SIMPLE)[-2]
         
+        #mouse movement
         if len(contours) > 0:
             max_con = max(contours, key=cv2.contourArea)
             ((x,y), radius) = cv2.minEnclosingCircle(max_con)
@@ -83,23 +85,54 @@ def main(argv):
                 continue
             center = (int(moments["m10"] / moments["m00"]),
                       int(moments["m01"] / moments["m00"]))
-
-            #draw circle around image
-            if radius > 10 and args.circle:
-                cv2.circle(img, (int(x), int(y)), int(radius), (255,0,0), 2)
-                cv2.circle(img, center, 5,(0,0,255), -1)
-                pts.appendleft(center)
-
-            #mouse movement
             x = center[0] / frame_width
             y = center[1] / frame_height
             mouse.move(x, y)
+
+        # get a smaller range of glove
+        circles = []
+        for con in contours:
+            ((x,y), radius) = cv2.minEnclosingCircle(con)
+            if radius <= 15:
+                continue
+            moments = cv2.moments(con)
+            if moments["m00"] == 0:
+                continue
+            center = (int(moments["m10"] / moments["m00"]),
+                      int(moments["m01"] / moments["m00"]))
+            circles.append((center, radius))
+        if len(circles) > 0:
+            (x, y) = (0 ,0)
+            for circle in circles: 
+                x += circle[0][0]
+                y += circle[0][1]
+            x /= len(circles)
+            y /= len(circles)
+            radius = 0
+            for circle in circles:
+                tempx = circle[0][0]
+                tempy = circle[0][1]
+                dist = (tempx-x) * (tempx-x) + (tempy-y) * (tempy-y)
+                dist = math.sqrt(dist)
+                radius = max(radius, dist + circle[1])
+            if radius <= 15:
+                continue
+            if args.circle:
+                cv2.circle(img, (int(x), int(y)), int(radius), (255,0,0), 2)
+                cv2.circle(img, (int(x), int(y)), 5,(0,0,255), -1)
+                pts.appendleft(center)
+
+            black = np.zeros((int(frame_height), int(frame_width), 3), np.uint8)
+            cv2.circle(black, (int(x), int(y)), int(radius), (255,255,255), -1)
+            glove = cv2.bitwise_and(img, black)
+            cv2.imshow("glove", glove)
+
 
         cv2.imshow("input", img)
 
         #list of various views
         #cv2.imshow("opening", opening)
-        #cv2.imshow("mask", mask)
+        # cv2.imshow("mask", mask)
         #cv2.imshow("dil", dil)
         #cv2.imshow("erode", erode)
         #cv2.imshow("erosion and dilation", morph)
