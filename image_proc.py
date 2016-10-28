@@ -4,6 +4,7 @@ from collections import deque
 import wx
 import sys
 import threading
+import math
 
 import colors
 from mouse import BasicController
@@ -24,8 +25,8 @@ class CameraThread(threading.Thread):
 		self.cap = self.set_camera()
 		self.kernel = np.ones((5,5),np.uint8)
 
-
-		self.pts = deque(maxlen=32)
+		self._circle = False
+		self._show_images = False
 
 		self.frame_width = self.cap.get(3)
 		self.frame_height = self.cap.get(4)
@@ -89,6 +90,7 @@ class CameraThread(threading.Thread):
 			contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
 										 cv2.CHAIN_APPROX_SIMPLE)[-2]
 		
+			#mouse movement
 			if len(contours) > 0:
 				max_con = max(contours, key=cv2.contourArea)
 				((x,y), radius) = cv2.minEnclosingCircle(max_con)
@@ -99,26 +101,52 @@ class CameraThread(threading.Thread):
 						  int(moments["m01"] / moments["m00"]))
 
 
+				scaled_x = center[0] / self.frame_width
+				scaled_y = center[1] / self.frame_height
+				self.mouse.move(scaled_x, scaled_y)
 
 				if self.release_resources():
 					return
 
-				
 				#draw circle around image
-				
-				#if radius > 10 and args.circle:
-				#	cv2.circle(img, (int(x), int(y)), int(radius), (255,0,0), 2)
-				#	cv2.circle(img, center, 5,(0,0,255), -1)
-				#	pts.appendleft(center)
+				if self._circle:
+					cv2.circle(img, (int(x), int(y)), int(radius), (255,0,0), 2)
 
-				#mouse movement
-				
-				x = center[0] / self.frame_width
-				y = center[1] / self.frame_height
-				self.mouse.move(x, y)
+				circles = []
+		        for con in contours:
+		            ((x,y), radius) = cv2.minEnclosingCircle(con)
+		            if radius <= 15:
+		                continue
+		            moments = cv2.moments(con)
+		            if moments["m00"] == 0:
+		                continue
+		            center = (int(moments["m10"] / moments["m00"]),
+		                      int(moments["m01"] / moments["m00"]))
+		            circles.append((center, radius))
+		        if len(circles) > 0:
+		            x = sum(circle[0][0] for circle in circles)
+		            x /= len(circles)
+		            y = sum(circle[0][1] for circle in circles)
+		            y /= len(circles)
+		            radius = 0
+		            for circle in circles:
+		                tempx = circle[0][0]
+		                tempy = circle[0][1]
+		                dist = (tempx-x) * (tempx-x) + (tempy-y) * (tempy-y)
+		                dist = math.sqrt(dist)
+		                radius = max(radius, dist + circle[1])
+		            if radius <= 15:
+		                continue
 
-				#self.show_image()
-				#cv2.imshow("input", img)
+		            black = np.zeros((int(self.frame_height), int(self.frame_width), 3), np.uint8)
+		            cv2.circle(black, (int(x), int(y)), int(radius), (255,255,255), -1)
+		            glove = cv2.bitwise_and(img, black)
+
+		            if self._show_images:
+		            	cv2.imshow("glove", glove)
+
+
+
 
 		self._released = self.release_resources()
 
