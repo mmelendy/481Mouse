@@ -18,10 +18,10 @@ class CameraThread(threading.Thread):
 
 		threading.Thread.__init__(self)
 
-		self.camera_num = 1
+		self.camera_num = None
 		self._released = False
 
-		self.cap = cv2.VideoCapture(self.camera_num)
+		self.cap = self.set_camera()
 		self.kernel = np.ones((5,5),np.uint8)
 
 
@@ -131,6 +131,13 @@ class CameraThread(threading.Thread):
 		self.new_color = color
 
 		std_out("change color")
+
+	def set_camera(self):
+		for i in reversed(xrange(5)):
+			cap = cv2.VideoCapture(i)
+			if cap.isOpened():
+				self.camera_num = i
+				return cap
 
 	def abort(self):
 		self._want_abort.set()

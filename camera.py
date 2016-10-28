@@ -6,12 +6,12 @@ from collections import deque
 import threading
 
 import colors
-from interface import ColorApp
+#from interface import ColorApp
 from mouse import BasicController
 
 def main(argv): 
     
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(2)
     kernel = np.ones((5,5),np.uint8)
     #get_camera_values(cap)
 
@@ -27,8 +27,8 @@ def main(argv):
     #app.MainLoop()
 
 
-    print app.frame.curr_color
-    sys.stdout.flush()
+    #print app.frame.curr_color
+    #sys.stdout.flush()
 
     pts = deque(maxlen=32)
 
@@ -111,7 +111,7 @@ def main(argv):
             break
 
     cv2.destroyAllWindows()
-    cv2.VideoCapture(0).release()
+    cv2.VideoCapture(2).release()
 
 
 def get_camera_values(cap):
