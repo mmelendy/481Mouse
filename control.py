@@ -2,52 +2,74 @@ import cv2
 import sys
 import argparse
 import numpy as np
-import math
 from collections import deque
-import threading
+import thread
 
 import colors
-#from interface import ColorApp
+from interface import ColorApp
 from mouse import BasicController
 
 def main(argv): 
     
-    cap = cv2.VideoCapture(2)
-    kernel = np.ones((5,5),np.uint8)
     #get_camera_values(cap)
 
     parser = argparse.ArgumentParser(description='HSV Color Space of a Single Color')
-    parser.add_argument("color", help="choose common color to start, bad color defaults blue")
+    #parser.add_argument("color", help="choose common color to start, bad color defaults blue")
     parser.add_argument("--circle", "-c", help="draw circle around object", action="store_true")
     parser.add_argument("--bars", "-b", help="add trackbars for erosion and dilation", action="store_true")
     args = parser.parse_args()
-    color = set_color(args.color)
+
     
 
-    #app = ColorApp()
-    #app.MainLoop()
+    try:
+        app = ColorApp()
+        #thread.start_new_thread(processing, (app, args))
+        #thread.start_new_thread(app.MainLoop(), ())
+        app.start()
+        #while True:
+        #    print app.frame.curr_color
+        #    sys.stdout.flush()
+        #while not app.frame.curr_color:
+            
+    except Exception as inst:
+        print "Unexpected Error:, ", sys.exc_info()[0]
+        print type(inst)
+        print inst.args
+        print inst
 
 
-    #print app.frame.curr_color
-    #sys.stdout.flush()
+    
+def processing(app, args):
+    
+    while not app.frame.curr_color:
+        pass
+
+    cap = cv2.VideoCapture(0)
+    kernel = np.ones((5,5),np.uint8)
+
+
+    pts = deque(maxlen=32)
 
     frame_width = cap.get(3)
     frame_height = cap.get(4)
     mouse = BasicController()
-    mouse.margin = (0.1, 0.2, 0.15, 0.15)
+    mouse.margin = (0.1, 0.3, 0.15, 0.15)
 
-    ero_it = 2
-    dil_it = 1
     if args.bars:
         cv2.namedWindow("mask")
-        cv2.createTrackbar("Erosion", "mask", ero_it, 10, nothing)
-        cv2.createTrackbar("Dilation", "mask", dil_it, 10, nothing)
+        cv2.createTrackbar("Erosion", "mask", 0, 10, nothing)
+        cv2.createTrackbar("Dilation", "mask", 0, 10, nothing)
+
+
+    ero_it = 2
+    dil_it = 3
 
     while True:
         ret, img = cap.read()
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-        if args.color != 'red':
+        #if args.color != 'red':
+        if app.frame.curr_color != 'red':
             mask = cv2.inRange(hsv, color[0], color[1])
 
         #red special case
@@ -56,17 +78,23 @@ def main(argv):
             mask1 = cv2.inRange(hsv, color[1][0], color[1][1])
             mask = mask0 + mask1
 
-        #get trackbar positions
+        #get trackbar positions, iterations cant be 0
         if args.bars:
             ero_it = cv2.getTrackbarPos("Erosion", "mask")
+            if ero_it == 0:
+                ero_it = 1
             dil_it = cv2.getTrackbarPos("Dilation", "mask")
+            if dil_it == 0:
+                dil_it = 1
 
-        mask = cv2.erode(mask,kernel,iterations = ero_it)
-        mask = cv2.dilate(mask,kernel,iterations = dil_it)
+        #opening = cv2.morphologyEx(res, cv2.MORPH_OPEN, kernel)
+        erode = cv2.erode(mask,kernel,iterations = ero_it)
+        dil = cv2.dilate(mask,kernel,iterations = dil_it)
+        opening = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
 
         contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
                                      cv2.CHAIN_APPROX_SIMPLE)[-2]
-        #mouse movement
+        
         if len(contours) > 0:
             max_con = max(contours, key=cv2.contourArea)
             ((x,y), radius) = cv2.minEnclosingCircle(max_con)
@@ -76,56 +104,35 @@ def main(argv):
             center = (int(moments["m10"] / moments["m00"]),
                       int(moments["m01"] / moments["m00"]))
 
-            scaled_x = center[0] / frame_width
-            scaled_y = center[1] / frame_height
-            mouse.move(scaled_x, scaled_y)
-
-            if args.circle:
+            #draw circle around image
+            if radius > 10 and args.circle:
                 cv2.circle(img, (int(x), int(y)), int(radius), (255,0,0), 2)
+                cv2.circle(img, center, 5,(0,0,255), -1)
+                pts.appendleft(center)
 
+            #mouse movement
+            x = center[0] / frame_width
+            y = center[1] / frame_height
+            mouse.move(x, y)
 
-        # get a smaller range of glove
-        circles = []
-        for con in contours:
-            ((x,y), radius) = cv2.minEnclosingCircle(con)
-            if radius <= 15:
-                continue
-            moments = cv2.moments(con)
-            if moments["m00"] == 0:
-                continue
-            center = (int(moments["m10"] / moments["m00"]),
-                      int(moments["m01"] / moments["m00"]))
-            circles.append((center, radius))
-        if len(circles) > 0:
-            x = sum(circle[0][0] for circle in circles)
-            x /= len(circles)
-            y = sum(circle[0][1] for circle in circles)
-            y /= len(circles)
-            radius = 0
-            for circle in circles:
-                tempx = circle[0][0]
-                tempy = circle[0][1]
-                dist = (tempx-x) * (tempx-x) + (tempy-y) * (tempy-y)
-                dist = math.sqrt(dist)
-                radius = max(radius, dist + circle[1])
-            if radius <= 15:
-                continue
-
-            black = np.zeros((int(frame_height), int(frame_width), 3), np.uint8)
-            cv2.circle(black, (int(x), int(y)), int(radius), (255,255,255), -1)
-            glove = cv2.bitwise_and(img, black)
-            cv2.imshow("glove", glove)
-
-
-        cv2.imshow("mask", mask)
         cv2.imshow("input", img)
+
+        #list of various views
+        #cv2.imshow("opening", opening)
+        #cv2.imshow("mask", mask)
+        #cv2.imshow("dil", dil)
+        #cv2.imshow("erode", erode)
+        #cv2.imshow("erosion and dilation", morph)
+        #res = cv2.bitwise_and(img, img, mask= mask)
+        #cv2.imshow("res " + args.color, res)
 
         key = cv2.waitKey(1) & 0xFF
         if key == ord("q"):
             break
 
     cv2.destroyAllWindows()
-    cv2.VideoCapture(2).release()
+    cv2.VideoCapture(0).release()
+ 
 
 
 def get_camera_values(cap):

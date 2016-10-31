@@ -32,15 +32,15 @@ class ColorSelector():
 
 		for key in self.colors:
 			print key
+		#for button in self._buttons:
+		#	button.pack(pady=1)
+
 			sys.stdout.flush()
 			button = Tkinter.Button(self.frame,bg=key,
 									padx=40,pady=20)#,command=lambda: curr_color(self,key))
 			#self._buttons.insert(0,button)
 			#self.frame.
 			button.pack(pady=1)
-		#for button in self._buttons:
-		#	button.pack(pady=1)
-
 		self.frame.pack()
 		self.top.mainloop()
 
