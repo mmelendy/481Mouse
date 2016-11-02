@@ -6,7 +6,8 @@ class MouseController:
     # 0,0 is the bottom left and 1,1 is the top right.
     def move(self, x, y):
         raise NotImplementedError()
-    def click(self):
+
+    def click(self, left, right):
         raise NotImplementedError()
 
 class BasicController(MouseController):
@@ -14,6 +15,7 @@ class BasicController(MouseController):
         self.mouse = PyMouse()
         self.width, self.height = self.mouse.screen_size()
         self.margin = (0.0, 0.0, 0.0, 0.0)
+        self.last_pos = (0,0)
 
     # The margin is the proportion of camera space that maps beyond the edge
     # of the computer screen. With a left margin of 0.1, moving your hand
@@ -28,7 +30,7 @@ class BasicController(MouseController):
         self._margin = np.clip(val, 0.0, 0.99)
     margin = property(get_margin, set_margin)
 
-    def move(self, x, y):
+    def move(self, x, y, left=False, right=False):
         # Rescale x and y so that moving the hand to the margin of the camera
         # space moves the cursor to the edge of the screen.
         def rescale(val, lower, upper):
@@ -43,7 +45,12 @@ class BasicController(MouseController):
         x = int(self.width * (1.0 - x))
         y = int(self.height * y)
 
+        self.last_pos = (x, y)
         self.mouse.move(x, y)
 
-    def click(self):
-        pass
+    def click(self, left, right):
+        x, y = self.last_pos
+        if left:
+            self.mouse.click(x, y, 1)
+        if right:
+            self.mouse.click(x, y, 2)

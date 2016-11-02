@@ -104,6 +104,8 @@ class CameraThread(threading.Thread):
 				scaled_x = center[0] / self.frame_width
 				scaled_y = center[1] / self.frame_height
 				self.mouse.move(scaled_x, scaled_y)
+                                #if clicking gesture active:
+                                #    self.mouse.click(True, False)
 
 				if self.release_resources():
 					return
