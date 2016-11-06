@@ -111,42 +111,42 @@ class CameraThread(threading.Thread):
             if self.release_resources():
                 return
 
-            #draw circle around image
-            if self._circle:
-                cv2.circle(img, (int(x), int(y)), int(radius), (255,0,0), 2)
+            # #draw circle around image
+            # if self._circle:
+            #     cv2.circle(img, (int(x), int(y)), int(radius), (255,0,0), 2)
 
-            circles = []
-            for con in contours:
-                ((x,y), radius) = cv2.minEnclosingCircle(con)
-                if radius <= 15:
-                    continue
-                moments = cv2.moments(con)
-                if moments["m00"] == 0:
-                    continue
-                center = (int(moments["m10"] / moments["m00"]),
-                          int(moments["m01"] / moments["m00"]))
-                circles.append((center, radius))
-            if len(circles) > 0:
-                x = sum(circle[0][0] for circle in circles)
-                x /= len(circles)
-                y = sum(circle[0][1] for circle in circles)
-                y /= len(circles)
-                radius = 0
-                for circle in circles:
-                    tempx = circle[0][0]
-                    tempy = circle[0][1]
-                    dist = (tempx-x) * (tempx-x) + (tempy-y) * (tempy-y)
-                    dist = math.sqrt(dist)
-                    radius = max(radius, dist + circle[1])
-                if radius <= 15:
-                    continue
+            # circles = []
+            # for con in contours:
+            #     ((x,y), radius) = cv2.minEnclosingCircle(con)
+            #     if radius <= 15:
+            #         continue
+            #     moments = cv2.moments(con)
+            #     if moments["m00"] == 0:
+            #         continue
+            #     center = (int(moments["m10"] / moments["m00"]),
+            #               int(moments["m01"] / moments["m00"]))
+            #     circles.append((center, radius))
+            # if len(circles) > 0:
+            #     x = sum(circle[0][0] for circle in circles)
+            #     x /= len(circles)
+            #     y = sum(circle[0][1] for circle in circles)
+            #     y /= len(circles)
+            #     radius = 0
+            #     for circle in circles:
+            #         tempx = circle[0][0]
+            #         tempy = circle[0][1]
+            #         dist = (tempx-x) * (tempx-x) + (tempy-y) * (tempy-y)
+            #         dist = math.sqrt(dist)
+            #         radius = max(radius, dist + circle[1])
+            #     if radius <= 15:
+            #         continue
 
-                black = np.zeros((int(self.frame_height), int(self.frame_width), 3), np.uint8)
-                cv2.circle(black, (int(x), int(y)), int(radius), (255,255,255), -1)
-                glove = cv2.bitwise_and(img, black)
+            #     black = np.zeros((int(self.frame_height), int(self.frame_width), 3), np.uint8)
+            #     cv2.circle(black, (int(x), int(y)), int(radius), (255,255,255), -1)
+            #     glove = cv2.bitwise_and(img, black)
 
-                if self._show_images:
-                    cv2.imshow("glove", glove)
+            #     if self._show_images:
+            #         cv2.imshow("glove", glove)
 
         self._released = self.release_resources()
 
