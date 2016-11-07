@@ -31,7 +31,7 @@ class CameraThread(threading.Thread):
         self.frame_width = self.cap.get(3)
         self.frame_height = self.cap.get(4)
         self.mouse = BasicController()
-        self.mouse.set_margin(((0.2, 0.8), (0.6, 0.6), (0.8, 0.2), (0.2, 0.2)))
+        self.mouse.set_margin(((0.1, 0.8), (0.6, 0.6), (0.8, 0.1), (0.1, 0.1)))
 
         self.camera_color = ''
         self.new_color = ''
@@ -97,9 +97,12 @@ class CameraThread(threading.Thread):
                       int(moments["m01"] / moments["m00"]))
 
 
+            # Scale x and y to between 0.0 and 1.0, and invert both: the camera
+            # is rotated 180 degrees from the user, and y=0 is the bottom, not
+            # the top.
             scaled_x = center[0] / self.frame_width
             scaled_y = center[1] / self.frame_height
-            self.mouse.move(scaled_x, scaled_y)
+            self.mouse.move(1.0 - scaled_x, 1.0 - scaled_y)
             #if clicking gesture active:
             #    self.mouse.click(True, False)
 

@@ -57,8 +57,6 @@ class BasicController(MouseController):
         self.n3 = normalize(ccw(self.p3 - self.p2))
 
     def move(self, x, y):
-        x = 1.0 - x
-
         # Map hand space onto screen space. Algorithm from StackExchange.
         # http://math.stackexchange.com/questions/13404/mapping-irregular-quadrilateral-to-a-rectangle/104595#104595
         p = np.array([x, y])
@@ -77,12 +75,13 @@ class BasicController(MouseController):
             print 'p: ', p
             print 'du0, du1, u: ', du0, du1, u
             print 'dv0, dv1, v: ', dv0, dv1, v
+            print
             sys.stdout.flush()
             self.frames = 0
 
         # Map from 0-1 onto actual screen dimensions.
         x = int(self.width * u)
-        y = int(self.height * v)
+        y = int(self.height * (1.0 - v))
 
         self.last_pos = (x, y)
         self.mouse.move(x, y)
