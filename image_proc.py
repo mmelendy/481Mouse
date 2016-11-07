@@ -31,7 +31,7 @@ class CameraThread(threading.Thread):
         self.frame_width = self.cap.get(3)
         self.frame_height = self.cap.get(4)
         self.mouse = BasicController()
-        self.mouse.margin = (0.1, 0.3, 0.15, 0.15)
+        self.mouse.set_margin(((0.2, 0.8), (0.6, 0.6), (0.8, 0.2), (0.2, 0.2)))
 
         self.camera_color = ''
         self.new_color = ''
@@ -84,14 +84,9 @@ class CameraThread(threading.Thread):
 
             erode = cv2.erode(mask,self.kernel,iterations = ero_it)
             dil = cv2.dilate(mask,self.kernel,iterations = dil_it)
-            opening = cv2.morphologyEx(mask, cv2.MORPH_OPEN, self.kernel)
 
             contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
                                          cv2.CHAIN_APPROX_SIMPLE)[-2]
-
-            #mouse movement
-            if len(contours) == 0:
-                continue
 
             max_con = max(contours, key=cv2.contourArea)
             ((x,y), radius) = cv2.minEnclosingCircle(max_con)
@@ -149,6 +144,9 @@ class CameraThread(threading.Thread):
                     cv2.imshow("glove", glove)
 
         self._released = self.release_resources()
+
+    def get_circle(self, image):
+        pass
 
     def set_color(self, color):
         std_out("set color")
