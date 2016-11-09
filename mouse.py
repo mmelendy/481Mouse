@@ -98,10 +98,20 @@ class JoystickController(MouseController):
         self.mouse = PyMouse()
         self.width, self.height = self.mouse.screen_size()
         self.last_pos = (0.5, 0.5)
-        self.dead_zone = 0.3
-        self.origin = np.array([0.5, 0.5])
-        self.speed = 0.1
         self.frames = 0
+
+        # The origin is the center of the hand space, where no movement occurs.
+        self.origin = np.array([0.5, 0.5])
+
+        # The dead zone is the minimum distance from origin at which any
+        # movement will occur, the size of the "center" of the hand space.
+        self.dead_zone = 0.1
+
+        # Higher speed means the mouse moves faster at all distances.
+        self.speed = 8.0
+
+        # Higher acceleration means the mouse moves *slower* for low distances.
+        self.acceleration = 4.0
 
     def move(self, x, y):
         p = np.array([x, y])
@@ -111,8 +121,10 @@ class JoystickController(MouseController):
 
         distance = r - self.dead_zone
         if (distance > 0.0):
+            distance = distance**self.acceleration * self.speed
+
             vec /= r
-            vec *= distance * self.speed
+            vec *= distance
 
             x = vec[0] + self.last_pos[0]
             y = vec[1] + self.last_pos[1]
