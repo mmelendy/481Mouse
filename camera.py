@@ -12,7 +12,7 @@ from mouse import BasicController
 
 def main(argv): 
     
-    cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture(0)
     kernel = np.ones((5,5),np.uint8)
     #get_camera_values(cap)
 
@@ -42,6 +42,13 @@ def main(argv):
         cv2.namedWindow("mask")
         cv2.createTrackbar("Erosion", "mask", ero_it, 10, nothing)
         cv2.createTrackbar("Dilation", "mask", dil_it, 10, nothing)
+
+    button_size = 20
+    current_button_size = 20
+
+    left_button_color = colors.color_dict.get("blue",colors.hsv_blue)
+    left_button_flag = False
+
 
     while True:
         ret, img = cap.read()
@@ -84,40 +91,70 @@ def main(argv):
                 cv2.circle(img, (int(x), int(y)), int(radius), (255,0,0), 2)
 
 
-        # get a smaller range of glove
-        circles = []
-        for con in contours:
-            ((x,y), radius) = cv2.minEnclosingCircle(con)
-            if radius <= 15:
-                continue
-            moments = cv2.moments(con)
-            if moments["m00"] == 0:
-                continue
-            center = (int(moments["m10"] / moments["m00"]),
-                      int(moments["m01"] / moments["m00"]))
-            circles.append((center, radius))
-        if len(circles) > 0:
-            x = sum(circle[0][0] for circle in circles)
-            x /= len(circles)
-            y = sum(circle[0][1] for circle in circles)
-            y /= len(circles)
-            radius = 0
-            for circle in circles:
-                tempx = circle[0][0]
-                tempy = circle[0][1]
-                dist = (tempx-x) * (tempx-x) + (tempy-y) * (tempy-y)
-                dist = math.sqrt(dist)
-                radius = max(radius, dist + circle[1])
-            if radius <= 15:
-                continue
+        # # get a smaller range of glove
+        # circles = []
+        # for con in contours:
+        #     ((x,y), radius) = cv2.minEnclosingCircle(con)
+        #     if radius <= 15:
+        #         continue
+        #     moments = cv2.moments(con)
+        #     if moments["m00"] == 0:
+        #         continue
+        #     center = (int(moments["m10"] / moments["m00"]),
+        #               int(moments["m01"] / moments["m00"]))
+        #     circles.append((center, radius))
+        # if len(circles) > 0:
+        #     x = sum(circle[0][0] for circle in circles)
+        #     x /= len(circles)
+        #     y = sum(circle[0][1] for circle in circles)
+        #     y /= len(circles)
+        #     radius = 0
+        #     for circle in circles:
+        #         tempx = circle[0][0]
+        #         tempy = circle[0][1]
+        #         dist = (tempx-x) * (tempx-x) + (tempy-y) * (tempy-y)
+        #         dist = math.sqrt(dist)
+        #         radius = max(radius, dist + circle[1])
+        #     if radius <= 15:
+        #         continue
 
             black = np.zeros((int(frame_height), int(frame_width), 3), np.uint8)
             cv2.circle(black, (int(x), int(y)), int(radius), (255,255,255), -1)
             glove = cv2.bitwise_and(img, black)
+            glove = cv2.cvtColor(glove, cv2.COLOR_BGR2HSV)
+
             cv2.imshow("glove", glove)
 
+            left_mb = cv2.inRange(glove, left_button_color[0], left_button_color[1])
+            left_mb = cv2.erode(left_mb,kernel,iterations = ero_it)
+            # left_mb = cv2.dilate(left_mb,kernel,iterations = dil_it)
 
-        cv2.imshow("mask", mask)
+            left_contour = cv2.findContours(left_mb.copy(), cv2.RETR_EXTERNAL,
+                                         cv2.CHAIN_APPROX_SIMPLE)[-2]
+            print len(left_contour)
+            sys.stdout.flush()
+            cv2.imshow("left_mb", left_mb)
+
+            if len(left_contour) > 0:
+                max_con = max(left_contour, key=cv2.contourArea)
+                ((x,y), radius) = cv2.minEnclosingCircle(max_con)
+
+                if not left_button_flag:
+                    if radius > button_size: 
+                        left_button_flag = True
+                        current_button_size  = radius
+                else:
+                    if radius < current_button_size * 0.1:
+                        # mouse.click(True, False)
+                        left_button_flag = False
+                        print "left click"
+
+                        sys.stdout.flush()
+
+
+
+
+        # cv2.imshow("mask", mask)
         cv2.imshow("input", img)
 
         key = cv2.waitKey(1) & 0xFF
