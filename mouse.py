@@ -15,7 +15,7 @@ class BasicController(MouseController):
     def __init__(self):
         self.mouse = PyMouse()
         self.width, self.height = self.mouse.screen_size()
-        self.last_pos = (0,0)
+        self.last_pos = (0, 0)
         self.p0 = None
         self.p1 = None
         self.p2 = None
@@ -85,6 +85,57 @@ class BasicController(MouseController):
 
         self.last_pos = (x, y)
         self.mouse.move(x, y)
+
+    def click(self, left, right):
+        x, y = self.last_pos
+        if left:
+            self.mouse.click(x, y, 1)
+        if right:
+            self.mouse.click(x, y, 2)
+
+class JoystickController(MouseController):
+    def __init__(self):
+        self.mouse = PyMouse()
+        self.width, self.height = self.mouse.screen_size()
+        self.last_pos = (0.5, 0.5)
+        self.dead_zone = 0.3
+        self.origin = np.array([0.5, 0.5])
+        self.speed = 0.1
+        self.frames = 0
+
+    def move(self, x, y):
+        p = np.array([x, y])
+
+        vec = p - self.origin
+        r = np.linalg.norm(vec)
+
+        distance = r - self.dead_zone
+        if (distance > 0.0):
+            vec /= r
+            vec *= distance * self.speed
+
+            x = vec[0] + self.last_pos[0]
+            y = vec[1] + self.last_pos[1]
+
+            x, y = np.clip([x, y], 0.0, 1.0)
+            self.last_pos = (x, y)
+
+            # Map from 0-1 onto actual screen dimensions.
+            x = int(self.width * x)
+            y = int(self.height * (1.0 - y))
+
+            self.frames += 1
+            if self.frames >= 50:
+                print 'p: ', p
+                print 'r, distance: ', r, distance
+                print 'vec: ', vec
+                print 'last pos: ', self.last_pos
+                print 'x, y: ', x, y
+                print
+                sys.stdout.flush()
+                self.frames = 0
+
+            self.mouse.move(x, y)
 
     def click(self, left, right):
         x, y = self.last_pos

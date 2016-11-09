@@ -7,7 +7,7 @@ import threading
 import math
 
 import colors
-from mouse import BasicController
+from mouse import BasicController, JoystickController
 
 def std_out(value):
     return
@@ -30,8 +30,10 @@ class CameraThread(threading.Thread):
 
         self.frame_width = self.cap.get(3)
         self.frame_height = self.cap.get(4)
+
         self.mouse = BasicController()
         self.mouse.set_margin(((0.1, 0.8), (0.6, 0.6), (0.8, 0.1), (0.1, 0.1)))
+        #self.mouse = JoystickController()
 
         self.camera_color = ''
         self.new_color = ''
