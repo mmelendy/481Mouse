@@ -97,7 +97,7 @@ class JoystickController(MouseController):
     def __init__(self):
         self.mouse = PyMouse()
         self.width, self.height = self.mouse.screen_size()
-        self.last_pos = (0.5, 0.5)
+        self.last_uv = (0.5, 0.5)
         self.frames = 0
 
         # The origin is the center of the hand space, where no movement occurs.
@@ -126,15 +126,17 @@ class JoystickController(MouseController):
             vec /= r
             vec *= distance
 
-            x = vec[0] + self.last_pos[0]
-            y = vec[1] + self.last_pos[1]
+            x = vec[0] + self.last_uv[0]
+            y = vec[1] + self.last_uv[1]
 
             x, y = np.clip([x, y], 0.0, 1.0)
-            self.last_pos = (x, y)
+            self.last_uv = (x, y)
 
             # Map from 0-1 onto actual screen dimensions.
             x = int(self.width * x)
             y = int(self.height * (1.0 - y))
+
+            self.last_pos = (x, y)
 
             self.frames += 1
             if self.frames >= 50:
