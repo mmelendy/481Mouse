@@ -32,7 +32,7 @@ class CameraThread(threading.Thread):
         self.frame_height = self.cap.get(4)
 
         self.mouse1 = BasicController()
-        self.mouse1.set_margin(((0.1, 0.8), (0.6, 0.6), (0.8, 0.1), (0.1, 0.1)))
+        self.mouse1.set_margin(((0.1, 0.8), (0.7, 0.7), (0.8, 0.1), (0.1, 0.1)))
         self.mouse2 = JoystickController()
 
         self.mouse = self.mouse1
