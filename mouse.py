@@ -11,10 +11,11 @@ class MouseController:
     def click(self, left, right):
         raise NotImplementedError()
 
+mouse = PyMouse()
+width, height = mouse.screen_size()
+
 class BasicController(MouseController):
     def __init__(self):
-        self.mouse = PyMouse()
-        self.width, self.height = self.mouse.screen_size()
         self.last_pos = (0, 0)
         self.p0 = None
         self.p1 = None
@@ -80,23 +81,21 @@ class BasicController(MouseController):
             self.frames = 0
 
         # Map from 0-1 onto actual screen dimensions.
-        x = int(self.width * u)
-        y = int(self.height * (1.0 - v))
+        x = int(width * u)
+        y = int(height * (1.0 - v))
 
         self.last_pos = (x, y)
-        self.mouse.move(x, y)
+        mouse.move(x, y)
 
     def click(self, left, right):
         x, y = self.last_pos
         if left:
-            self.mouse.click(x, y, 1)
+            mouse.click(x, y, 1)
         if right:
-            self.mouse.click(x, y, 2)
+            mouse.click(x, y, 2)
 
 class JoystickController(MouseController):
     def __init__(self):
-        self.mouse = PyMouse()
-        self.width, self.height = self.mouse.screen_size()
         self.last_uv = (0.5, 0.5)
         self.frames = 0
 
@@ -133,8 +132,8 @@ class JoystickController(MouseController):
             self.last_uv = (x, y)
 
             # Map from 0-1 onto actual screen dimensions.
-            x = int(self.width * x)
-            y = int(self.height * (1.0 - y))
+            x = int(width * x)
+            y = int(height * (1.0 - y))
 
             self.last_pos = (x, y)
 
@@ -149,11 +148,11 @@ class JoystickController(MouseController):
                 sys.stdout.flush()
                 self.frames = 0
 
-            self.mouse.move(x, y)
+            mouse.move(x, y)
 
     def click(self, left, right):
         x, y = self.last_pos
         if left:
-            self.mouse.click(x, y, 1)
+            mouse.click(x, y, 1)
         if right:
-            self.mouse.click(x, y, 2)
+            mouse.click(x, y, 2)
