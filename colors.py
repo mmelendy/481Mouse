@@ -8,7 +8,7 @@ hsv_red_h = [np.array([170,50,50]), np.array([179,255,255])]
 
 hsv_red = [hsv_red_l, hsv_red_h]
 
-hsv_yellow = [np.array([80,50,50]), np.array([100,255,255])]
+hsv_yellow = [np.array([20,50,50]), np.array([40,255,255])]
 
 hsv_green = [np.array([50,50,50]), np.array([70,255,255])]
 

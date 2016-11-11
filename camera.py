@@ -43,13 +43,14 @@ def main(argv):
         cv2.createTrackbar("Erosion", "mask", ero_it, 10, nothing)
         cv2.createTrackbar("Dilation", "mask", dil_it, 10, nothing)
 
-    button_size = 20
-    current_button_size = 20
+    button_size = 30
+    current_l_button_size = 30
+    current_r_button_size = 30
 
     right_button_color = "blue"
     right_button_flag = False
 
-    left_button_color = "red"
+    left_button_color = "yellow"
     left_button_flag = False
     # lmb_flag_counter = 0
     # lmb_not_seen_counter = 0
@@ -131,15 +132,15 @@ def main(argv):
             # cv2.imshow("glove", glove)
 
             left_mb = get_mask(glove, left_button_color)
-            left_mb = cv2.dilate(left_mb,kernel,iterations = 2)
-            left_mb = cv2.erode(left_mb,kernel,iterations = 1)
+            left_mb = cv2.erode(left_mb,kernel,iterations = 2)
+            left_mb = cv2.dilate(left_mb,kernel,iterations = 1)
 
             left_contour = cv2.findContours(left_mb.copy(), cv2.RETR_EXTERNAL,
                                          cv2.CHAIN_APPROX_SIMPLE)[-2]
 
             right_mb = get_mask(glove, right_button_color)
-            right_mb = cv2.dilate(right_mb,kernel,iterations = 2)
-            right_mb = cv2.erode(right_mb,kernel,iterations = 1)
+            right_mb = cv2.erode(right_mb,kernel,iterations = 2)
+            right_mb = cv2.dilate(right_mb,kernel,iterations = 1)
 
             right_contour = cv2.findContours(right_mb.copy(), cv2.RETR_EXTERNAL,
                                          cv2.CHAIN_APPROX_SIMPLE)[-2]
@@ -147,46 +148,58 @@ def main(argv):
             #sys.stdout.flush()
             cv2.imshow("left_mb", left_mb)
             cv2.imshow("right_mb", right_mb)
+            
 
-            if len(left_contour) > 0:
-                # if lmb_flag_counter > wait_frames:
-                max_con = max(left_contour, key=cv2.contourArea)
-                ((x,y), radius) = cv2.minEnclosingCircle(max_con)
+            # if len(left_contour) > 0:
+            #     max_con = max(left_contour, key=cv2.contourArea)
+            #     ((x,y), l_radius) = cv2.minEnclosingCircle(max_con)
 
-                if not left_button_flag:
-                    if radius > button_size: 
-                        left_button_flag = True
-                        current_button_size  = radius
-                else:
-                    if radius < current_button_size * 0.5:
-                        # mouse.click(True, False)
-                        left_button_flag = False
-                        print "left click"
+            # if not left_button_flag:
+            #     if l_radius > button_size: 
+            #         left_button_flag = True
+            #         current_l_button_size  = l_radius
+            # else:
+            #     if l_radius < current_l_button_size * 0.5:
+            #         # mouse.click(True, False)
+            #         left_button_flag = False
+            #         current_l_button_size = button_size
+            #         print "left click"
 
-                        sys.stdout.flush()
+            #         sys.stdout.flush()
+            #     else:
+            #         current_l_button_size = l_radius
+            l_radius = 0
+            l_radius, current_l_button_size, left_button_flag = \
+                    detect_button(left_contour, l_radius, left_button_flag, \
+                                current_l_button_size, button_size, "left")
 
-            else:
-                pass
+            r_radius = 0
+            r_radius, current_r_button_size, right_button_flag = \
+                    detect_button(right_contour, r_radius, right_button_flag, \
+                         current_r_button_size, button_size, "right")
+            
+            # print l_radius, left_button_flag,  current_l_button_size
+            # sys.stdout.flush()
 
-            if len(right_contour) > 0:
-                # if lmb_flag_counter > wait_frames:
-                max_con = max(right_contour, key=cv2.contourArea)
-                ((x,y), radius) = cv2.minEnclosingCircle(max_con)
+            # if len(right_contour) > 0:
+            #     # if lmb_flag_counter > wait_frames:
+            #     max_con = max(right_contour, key=cv2.contourArea)
+            #     ((x,y), radius) = cv2.minEnclosingCircle(max_con)
 
-                if not right_button_flag:
-                    if radius > button_size: 
-                        right_button_flag = True
-                        current_button_size  = radius
-                else:
-                    if radius < current_button_size * 0.5:
-                        # mouse.click(False, True)
-                        right_button_flag = False
-                        print "right click"
+            #     if not right_button_flag:
+            #         if radius > button_size: 
+            #             right_button_flag = True
+            #             current_r_button_size  = radius
+            #     else:
+            #         if radius < current_r_button_size * 0.5:
+            #             # mouse.click(False, True)
+            #             right_button_flag = False
+            #             print "right click"
 
-                        sys.stdout.flush()
+            #             sys.stdout.flush()
 
-            else:
-                pass
+            # else:
+            #     pass
 
 
 
@@ -201,9 +214,32 @@ def main(argv):
     cv2.destroyAllWindows()
     cv2.VideoCapture(1).release()
 
+def detect_button(contour, radius, button_flag, current_size, button_size, button):
+
+    if len(contour) > 0:
+        max_con = max(contour, key=cv2.contourArea)
+        ((x,y), radius) = cv2.minEnclosingCircle(max_con)
+
+    if not button_flag:
+        if radius > button_size: 
+            button_flag = True
+            current_size  = radius
+    else:
+        if radius < current_size * 0.5:
+            # mouse.click(True, False)
+            button_flag = False
+            current_size = button_size
+            print button
+
+            sys.stdout.flush()
+        else:
+            current_size = radius
+
+    return radius, current_size, button_flag
+
+
 def get_mask(hsv, color):
     color_range = colors.color_dict.get(color, colors.hsv_blue)
-
     if color != 'red':
         return cv2.inRange(hsv, color_range[0], color_range[1])
     else: 
