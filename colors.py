@@ -12,16 +12,19 @@ hsv_yellow = [np.array([20,50,50]), np.array([40,255,255])]
 
 hsv_green = [np.array([50,50,50]), np.array([70,255,255])]
 
+hsv_cyan = [np.array([90,50,50]), np.array([110,255,255])]
+
 hsv_blue = [np.array([110,50,50]), np.array([130,255,255])]
 
-hsv_cyan = [np.array([90,50,50]), np.array([110,255,255])]
+hsv_purple = [np.array([130,50,50]), np.array([150,255,255])]
 
 color_dict = {
         'red' : hsv_red,
         'yellow' : hsv_yellow,
         'green' : hsv_green,
+        'cyan' : hsv_cyan,
         'blue' : hsv_blue,
-        'cyan' : hsv_cyan
+        'purple' : hsv_purple
         }
 
-color_list = ['red','yellow','green','cyan','blue']
+color_list = ['yellow','green','cyan','blue', 'purple']

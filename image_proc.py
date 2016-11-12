@@ -25,8 +25,8 @@ class CameraThread(threading.Thread):
         self.cap = self.set_camera()
         self.kernel = np.ones((5,5),np.uint8)
 
-        self._circle = False
-        self._show_images = False
+        self.erode_it = 2
+        self.dilation_it = 1
 
         self.frame_width = self.cap.get(3)
         self.frame_height = self.cap.get(4)
@@ -35,6 +35,16 @@ class CameraThread(threading.Thread):
 
         self.camera_color = ''
         self.new_color = ''
+
+        self.left_button_color = 'blue'
+        self.right_button_color = 'yellow'
+
+        self.button_size = 30
+        self.current_l_button_size = 30
+        self.current_r_button_size = 30
+
+        self.right_button_flag = False
+        self.left_button_flag = False
 
         self._want_abort = threading.Event()
         self._want_color_change = 0
@@ -51,9 +61,7 @@ class CameraThread(threading.Thread):
                 self._want_color_change = 0
                 color = self.set_color(self.camera_color)
 
-        ero_it = 2
-        dil_it = 1
-
+        
         while not self._want_abort.isSet():
 
             if self._want_color_change == 1:
@@ -62,39 +70,26 @@ class CameraThread(threading.Thread):
                 self._want_color_change = 0
                 color = self.set_color(self.camera_color)
 
-
-            if self.release_resources():
-                return
-
             ret, img = self.cap.read()
             hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-            if self.camera_color != 'red':
-                mask = cv2.inRange(hsv, color[0], color[1])
+            mask, contours = self.get_image_contour(hsv, self.camera_color)
 
-            #red special case
-            else:
-                mask0 = cv2.inRange(hsv, color[0][0], color[0][1])
-                mask1 = cv2.inRange(hsv, color[1][0], color[1][1])
-                mask = mask0 + mask1
-
-
-            if self.release_resources():
-                return
-
-            erode = cv2.erode(mask,self.kernel,iterations = ero_it)
-            dil = cv2.dilate(mask,self.kernel,iterations = dil_it)
-            opening = cv2.morphologyEx(mask, cv2.MORPH_OPEN, self.kernel)
-
-            contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-                                         cv2.CHAIN_APPROX_SIMPLE)[-2]
+            #mask = cv2.erode(mask,self.kernel,iterations = self.erode_it)
+            #mask = cv2.dilate(mask,self.kernel,iterations = self.dilation_it)
+            
+            #contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
+            #                             cv2.CHAIN_APPROX_SIMPLE)[-2]
 
             #mouse movement
             if len(contours) == 0:
                 continue
 
-            max_con = max(contours, key=cv2.contourArea)
-            ((x,y), radius) = cv2.minEnclosingCircle(max_con)
+            max_con, radius = self.enclosing_circle(contours)
+
+            #max_con = max(contours, key=cv2.contourArea)
+            #((x,y), radius) = cv2.minEnclosingCircle(max_con)
+            
             moments = cv2.moments(max_con)
             if moments["m00"] == 0:
                 continue
@@ -105,50 +100,104 @@ class CameraThread(threading.Thread):
             scaled_x = center[0] / self.frame_width
             scaled_y = center[1] / self.frame_height
             self.mouse.move(scaled_x, scaled_y)
-            #if clicking gesture active:
-            #    self.mouse.click(True, False)
+
+
+            circles = []
+            for con in contours:
+                ((x,y), radius) = cv2.minEnclosingCircle(con)
+                if radius <= 15:
+                    continue
+                moments = cv2.moments(con)
+                if moments["m00"] == 0:
+                    continue
+                center = (int(moments["m10"] / moments["m00"]),
+                          int(moments["m01"] / moments["m00"]))
+                circles.append((center, radius))
+            
+            if len(circles) == 0:
+                continue
+
+            x = sum(circle[0][0] for circle in circles)
+            x /= len(circles)
+            y = sum(circle[0][1] for circle in circles)
+            y /= len(circles)
+            radius = 0
+            for circle in circles:
+                tempx = circle[0][0]
+                tempy = circle[0][1]
+                dist = (tempx-x) * (tempx-x) + (tempy-y) * (tempy-y)
+                dist = math.sqrt(dist)
+                radius = max(radius, dist + circle[1])
+
+            black = np.zeros((int(self.frame_height), int(self.frame_width), 3), np.uint8)
+            cv2.circle(black, (int(x), int(y)), int(radius), (255,255,255), -1)
+            glove = cv2.bitwise_and(hsv, black)
+
+            left_mb, left_contour = self.get_image_contour(glove, self.left_button_color)
+
+            right_mb, right_contour = self.get_image_contour(glove, self.right_button_color)
+
+            self.current_l_button_size, self.left_button_flag = \
+                self.detect_button(left_contour, self.left_button_flag, 
+                                    self.current_l_button_size, 'left')
+            
+            self.current_r_button_size, self.right_button_flag = \
+                self.detect_button(right_contour,  self.left_button_flag, 
+                                    self.current_l_button_size, 'right')
+
 
             if self.release_resources():
                 return
 
-            # #draw circle around image
-            # if self._circle:
-            #     cv2.circle(img, (int(x), int(y)), int(radius), (255,0,0), 2)
-
-            # circles = []
-            # for con in contours:
-            #     ((x,y), radius) = cv2.minEnclosingCircle(con)
-            #     if radius <= 15:
-            #         continue
-            #     moments = cv2.moments(con)
-            #     if moments["m00"] == 0:
-            #         continue
-            #     center = (int(moments["m10"] / moments["m00"]),
-            #               int(moments["m01"] / moments["m00"]))
-            #     circles.append((center, radius))
-            # if len(circles) > 0:
-            #     x = sum(circle[0][0] for circle in circles)
-            #     x /= len(circles)
-            #     y = sum(circle[0][1] for circle in circles)
-            #     y /= len(circles)
-            #     radius = 0
-            #     for circle in circles:
-            #         tempx = circle[0][0]
-            #         tempy = circle[0][1]
-            #         dist = (tempx-x) * (tempx-x) + (tempy-y) * (tempy-y)
-            #         dist = math.sqrt(dist)
-            #         radius = max(radius, dist + circle[1])
-            #     if radius <= 15:
-            #         continue
-
-            #     black = np.zeros((int(self.frame_height), int(self.frame_width), 3), np.uint8)
-            #     cv2.circle(black, (int(x), int(y)), int(radius), (255,255,255), -1)
-            #     glove = cv2.bitwise_and(img, black)
-
-            #     if self._show_images:
-            #         cv2.imshow("glove", glove)
 
         self._released = self.release_resources()
+
+    def get_mask(self, hsv, color):
+        color_range = colors.color_dict.get(color, colors.hsv_blue)
+        if color != 'red':
+            return cv2.inRange(hsv, color_range[0], color_range[1])
+        else: 
+            return cv2.inRange(hsv, color_range[0][0], color_range[0][1]) \
+                 + cv2.inRange(hsv, color_range[1][0], color_range[1][1])
+
+
+    def get_image_contour(self, image, color):
+        mask = self.get_mask(image, color)
+        image = cv2.erode(mask,self.kernel,iterations = self.erode_it)
+        image = cv2.dilate(mask,self.kernel,iterations = self.dilation_it)
+
+        contour = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
+                                    cv2.CHAIN_APPROX_SIMPLE)[-2]
+        return mask, contour
+
+    def detect_button(self, contour, flag, current_size, button):
+    
+        radius = 0
+        if len(contour) > 0:
+            max_con, radius = self.enclosing_circle(contour)
+
+        #max_con = max(contour, key=cv2.contourArea)
+        #((x,y), radius) = cv2.minEnclosingCircle(max_con)
+
+        if not flag:
+            if radius > self.button_size: 
+                flag = True
+                current_size  = radius
+        else:
+            if radius < current_size * 0.5:
+                # mouse.click(True, False)
+                flag = False
+                current_size = self.button_size
+                self.std_out(button)
+            else:
+                current_size = radius
+
+        return current_size, flag
+
+    def enclosing_circle(self, contour):
+        max_con = max(contour, key=cv2.contourArea)
+        ((x,y), radius) = cv2.minEnclosingCircle(max_con)
+        return max_con, radius
 
     def set_color(self, color):
         std_out("set color")
