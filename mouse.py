@@ -14,6 +14,9 @@ class MouseController:
 mouse = PyMouse()
 width, height = mouse.screen_size()
 
+# Set to True to make controllers output useful information.
+debug_output = False
+
 class BasicController(MouseController):
     def __init__(self):
         self.last_pos = (0, 0)
@@ -70,15 +73,16 @@ class BasicController(MouseController):
         dv1 = np.dot((p - self.p3), self.n3)
         v = dv0 / (dv0 + dv1)
 
-        self.frames += 1
-        if (self.frames >= 50):
-            print 'corners: ', self.p3, self.p2, self.p1, self.p0
-            print 'p: ', p
-            print 'du0, du1, u: ', du0, du1, u
-            print 'dv0, dv1, v: ', dv0, dv1, v
-            print
-            sys.stdout.flush()
-            self.frames = 0
+        if debug_output:
+            self.frames += 1
+            if (self.frames >= 50):
+                print 'corners: ', self.p3, self.p2, self.p1, self.p0
+                print 'p: ', p
+                print 'du0, du1, u: ', du0, du1, u
+                print 'dv0, dv1, v: ', dv0, dv1, v
+                print
+                sys.stdout.flush()
+                self.frames = 0
 
         # Map from 0-1 onto actual screen dimensions.
         x = int(width * u)
@@ -137,16 +141,17 @@ class JoystickController(MouseController):
 
             self.last_pos = (x, y)
 
-            self.frames += 1
-            if self.frames >= 50:
-                print 'p: ', p
-                print 'r, distance: ', r, distance
-                print 'vec: ', vec
-                print 'last pos: ', self.last_pos
-                print 'x, y: ', x, y
-                print
-                sys.stdout.flush()
-                self.frames = 0
+            if debug_output:
+                self.frames += 1
+                if self.frames >= 50:
+                    print 'p: ', p
+                    print 'r, distance: ', r, distance
+                    print 'vec: ', vec
+                    print 'last pos: ', self.last_pos
+                    print 'x, y: ', x, y
+                    print
+                    sys.stdout.flush()
+                    self.frames = 0
 
             mouse.move(x, y)
 
