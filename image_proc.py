@@ -195,7 +195,7 @@ class CameraThread(threading.Thread):
                 # mouse.click(True, False)
                 flag = False
                 current_size = self.button_size
-                self.std_out(button)
+                std_out(button)
             else:
                 current_size = radius
 
