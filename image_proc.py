@@ -219,7 +219,8 @@ class ColorFrame(wx.Frame):
         self._box.Add(self.rb1, 1, wx.ALIGN_CENTER)
         self.rb1.Bind(wx.EVT_RADIOBUTTON, self.setController)
 
-        corner_label = wx.StaticText(self._panel, -1, label="Corner coordinates", style=wx.ALIGN_CENTER)
+        corner_label = wx.StaticText(self._panel, -1, label="Corner coordinates (?)", style=wx.ALIGN_CENTER)
+        corner_label.SetToolTip(wx.ToolTip("Coordinates are given as percentage offsets from the bottom and left of the screen. These corners define the shape and size of the space across which your hand needs to move to reach the corners and edges of the screen."))
         self._box.Add(corner_label, 0, wx.CENTER)
 
         self.corners = []

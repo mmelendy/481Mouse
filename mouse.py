@@ -108,7 +108,7 @@ class JoystickController(MouseController):
 
         # The dead zone is the minimum distance from origin at which any
         # movement will occur, the size of the "center" of the hand space.
-        self.dead_zone = 0.1
+        self.dead_zone = 0.05
 
         # Higher speed means the mouse moves faster at all distances.
         self.speed = 8.0
