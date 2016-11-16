@@ -120,7 +120,7 @@ def main(argv):
             glove = cv2.bitwise_and(hsv, black)
             # glove = cv2.cvtColor(glove, cv2.COLOR_BGR2HSV)
 
-            # cv2.imshow("glove", glove)
+            cv2.imshow("glove", glove)
 
             left_mb = get_mask(glove, left_button_color)
             left_mb = cv2.erode(left_mb,kernel,iterations = 2)

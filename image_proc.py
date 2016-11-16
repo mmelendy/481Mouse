@@ -102,12 +102,6 @@ class CameraThread(threading.Thread):
                       int(moments["m01"] / moments["m00"]))
 
 
-            # Scale x and y to between 0.0 and 1.0, and invert both: the camera
-            # is rotated 180 degrees from the user, and y=0 is the bottom, not
-            # the top.
-            scaled_x = center[0] / self.frame_width
-            scaled_y = center[1] / self.frame_height
-            self.mouse.move(1.0 - scaled_x, 1.0 - scaled_y)
 
 
             circles = []
@@ -141,17 +135,31 @@ class CameraThread(threading.Thread):
             cv2.circle(black, (int(x), int(y)), int(radius), (255,255,255), -1)
             glove = cv2.bitwise_and(hsv, black)
 
+            # cv2.imshow("glove", glove)
+
             left_mb, left_contour = self.get_image_contour(glove, self.left_button_color)
 
             right_mb, right_contour = self.get_image_contour(glove, self.right_button_color)
+
+            # cv2.imshow("left_mb", left_mb)
+            # cv2.imshow("right_mb", right_mb)
 
             self.current_l_button_size, self.left_button_flag = \
                 self.detect_button(left_contour, self.left_button_flag, 
                                     self.current_l_button_size, 'left')
             
             self.current_r_button_size, self.right_button_flag = \
-                self.detect_button(right_contour,  self.left_button_flag, 
-                                    self.current_l_button_size, 'right')
+                self.detect_button(right_contour,  self.right_button_flag, 
+                                    self.current_r_button_size, 'right')
+
+            if self.left_button_flag and self.right_button_flag:
+                # Scale x and y to between 0.0 and 1.0, and invert both: the camera
+                # is rotated 180 degrees from the user, and y=0 is the bottom, not
+                # the top.
+                scaled_x = center[0] / self.frame_width
+                scaled_y = center[1] / self.frame_height
+                self.mouse.move(1.0 - scaled_x, 1.0 - scaled_y)
+
 
             if self.release_resources():
                 return
@@ -193,11 +201,16 @@ class CameraThread(threading.Thread):
         else:
             if radius < current_size * 0.5:
                 # mouse.click(True, False)
+                if button == 'left':
+                    self.mouse.click(True, False)
+                elif button == 'right':
+                    self.mouse.click(False, True)
                 flag = False
                 current_size = self.button_size
                 std_out(button)
             else:
                 current_size = radius
+
 
         return current_size, flag
 
