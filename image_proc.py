@@ -248,6 +248,8 @@ class ColorFrame(wx.Frame):
         self.camera = CameraThread()
 
         self.createDisplay()
+        self.default_margins()
+
         self._panel.SetSizer(self._box)
         self.Center()
         self.Bind(wx.EVT_CLOSE, self.closeWindow)
@@ -302,20 +304,25 @@ class ColorFrame(wx.Frame):
         self._box.AddSpacer(25, 5)
         self._box.Add(bottom_row, flag=wx.EXPAND)
 
-        default_corners = [10,80, 70,70, 80,10, 10,10]
-        for i in xrange(len(self.corners)):
-            self.corners[i].SetValue(default_corners[i])
-        self.update_margin(None)
-
-        margin_button = wx.Button(self._panel, label="Change margins")
-        self._box.Add(margin_button)
-        margin_button.Bind(wx.EVT_BUTTON, self.update_margin)
+        margin_buttons_box = wx.BoxSizer(wx.HORIZONTAL)
+        default_margin_button = wx.Button(self._panel, label="Default margins")
+        default_margin_button.Bind(wx.EVT_BUTTON, self.default_margins)
+        apply_margin_button = wx.Button(self._panel, label="Apply changes")
+        apply_margin_button.Bind(wx.EVT_BUTTON, self.update_margin)
+        margin_buttons_box.AddMany([default_margin_button, apply_margin_button])
+        self._box.Add(margin_buttons_box, 1, wx.ALIGN_RIGHT)
 
         self.rb2 = wx.RadioButton(self._panel, label="Joystick mode")
         self._box.Add(self.rb2, 1, wx.ALIGN_CENTER)
         self.rb2.Bind(wx.EVT_RADIOBUTTON, self.setController)
 
-    def update_margin(self, event):
+    def default_margins(self, event=None):
+        default_corners = [10,80, 70,70, 80,10, 10,10]
+        for i in xrange(len(self.corners)):
+            self.corners[i].SetValue(default_corners[i])
+        self.update_margin()
+
+    def update_margin(self, event=None):
         def adjacent_pairs(lst):
             for i in xrange(0, len(lst), 2):
                 yield (lst[i].GetValue() / 100., lst[i+1].GetValue() / 100.)
