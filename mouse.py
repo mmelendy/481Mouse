@@ -108,13 +108,13 @@ class JoystickController(MouseController):
 
         # The dead zone is the minimum distance from origin at which any
         # movement will occur, the size of the "center" of the hand space.
-        self.dead_zone = 0.05
+        self.dead_zone = 0.0
 
         # Higher speed means the mouse moves faster at all distances.
-        self.speed = 8.0
+        self.speed = 1.0
 
         # Higher acceleration means the mouse moves *slower* for low distances.
-        self.acceleration = 4.0
+        self.acceleration = 1.0
 
     def move(self, x, y):
         p = np.array([x, y])

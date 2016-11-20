@@ -249,6 +249,7 @@ class ColorFrame(wx.Frame):
 
         self.createDisplay()
         self.default_margins()
+        self.default_joystick()
 
         self._panel.SetSizer(self._box)
         self.Center()
@@ -316,6 +317,27 @@ class ColorFrame(wx.Frame):
         self._box.Add(self.rb2, 1, wx.ALIGN_CENTER)
         self.rb2.Bind(wx.EVT_RADIOBUTTON, self.setController)
 
+        joystick_controls = wx.BoxSizer(wx.HORIZONTAL)
+        self.joy_speed = wx.SpinCtrl(self._panel, size=(50,20))
+        self.joy_speed.SetRange(1, 40)
+        self.joy_speed.SetToolTip(wx.ToolTip("Higher values mean the cursor moves faster"))
+        self.joy_accel = wx.SpinCtrl(self._panel, size=(50,20))
+        self.joy_accel.SetRange(1, 20)
+        self.joy_accel.SetToolTip(wx.ToolTip("Higher values mean the cursor moves more slowly at small distances"))
+        self.joy_dz = wx.SpinCtrl(self._panel, size=(50,20))
+        self.joy_dz.SetRange(0, 40)
+        self.joy_dz.SetToolTip(wx.ToolTip("The percentage of the screen corresponding to the 'center', where no movement occurs"))
+        joystick_controls.AddMany([self.joy_speed, self.joy_accel, self.joy_dz])
+        self._box.Add(joystick_controls)
+
+        joystick_buttons_box = wx.BoxSizer(wx.HORIZONTAL)
+        default_joystick_button = wx.Button(self._panel, label="Default settings")
+        default_joystick_button.Bind(wx.EVT_BUTTON, self.default_joystick)
+        apply_joystick_button = wx.Button(self._panel, label="Apply changes")
+        apply_joystick_button.Bind(wx.EVT_BUTTON, self.apply_joystick)
+        joystick_buttons_box.AddMany([default_joystick_button, apply_joystick_button])
+        self._box.Add(joystick_buttons_box, 1, wx.ALIGN_RIGHT)
+
     def default_margins(self, event=None):
         default_corners = [10,80, 70,70, 80,10, 10,10]
         for i in xrange(len(self.corners)):
@@ -329,6 +351,17 @@ class ColorFrame(wx.Frame):
 
         new_corners = tuple(adjacent_pairs(self.corners))
         self.camera.basic_mouse.set_margin(new_corners)
+
+    def default_joystick(self, event=None):
+        self.joy_speed.SetValue(8)
+        self.joy_accel.SetValue(4)
+        self.joy_dz.SetValue(5)
+        self.apply_joystick()
+
+    def apply_joystick(self, event=None):
+        self.camera.joystick_mouse.speed = self.joy_speed.GetValue()
+        self.camera.joystick_mouse.acceleration = self.joy_accel.GetValue()
+        self.camera.joystick_mouse.dead_zone = self.joy_dz.GetValue() / 100.0
 
     def setController(self, event):
         if self.rb1.GetValue():
