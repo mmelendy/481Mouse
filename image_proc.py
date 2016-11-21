@@ -241,7 +241,7 @@ class CameraThread(threading.Thread):
 
 class ColorFrame(wx.Frame):
     def __init__(self):
-        super(ColorFrame, self).__init__(None,-1,"Color Selector",wx.Point(100,100),wx.Size(250,400))
+        super(ColorFrame, self).__init__(None,-1,"Color Selector",wx.Point(100,100),wx.Size(250,420))
         self._panel = wx.Panel(self)
         self._box = wx.BoxSizer(wx.VERTICAL)
 
@@ -302,7 +302,7 @@ class ColorFrame(wx.Frame):
         bottom_row.Add(br)
 
         self._box.Add(top_row, flag=wx.EXPAND)
-        self._box.AddSpacer(25, 5)
+        self._box.AddSpacer(20, 5)
         self._box.Add(bottom_row, flag=wx.EXPAND)
 
         margin_buttons_box = wx.BoxSizer(wx.HORIZONTAL)
@@ -317,18 +317,27 @@ class ColorFrame(wx.Frame):
         self._box.Add(self.rb2, 1, wx.ALIGN_CENTER)
         self.rb2.Bind(wx.EVT_RADIOBUTTON, self.setController)
 
-        joystick_controls = wx.BoxSizer(wx.HORIZONTAL)
+        def label_control(text, tooltip, ctrl):
+            sizer = wx.BoxSizer(wx.HORIZONTAL)
+            label = wx.StaticText(self._panel, label=text)
+            label.SetToolTip(wx.ToolTip(tooltip))
+            sizer.Add(label)
+            sizer.AddStretchSpacer()
+            sizer.AddSpacer((5,5))
+            sizer.Add(ctrl, 0, wx.ALIGN_RIGHT)
+            return sizer
+
+        joystick_controls = wx.BoxSizer(wx.VERTICAL)
         self.joy_speed = wx.SpinCtrl(self._panel, size=(50,20))
         self.joy_speed.SetRange(1, 40)
-        self.joy_speed.SetToolTip(wx.ToolTip("Higher values mean the cursor moves faster"))
+        joystick_controls.Add(label_control("Speed (?)", "Higher values mean the cursor moves faster", self.joy_speed), 1, wx.EXPAND)
         self.joy_accel = wx.SpinCtrl(self._panel, size=(50,20))
         self.joy_accel.SetRange(1, 20)
-        self.joy_accel.SetToolTip(wx.ToolTip("Higher values mean the cursor moves more slowly at small distances"))
+        joystick_controls.Add(label_control("Acceleration (?)", "Higher values mean the cursor moves more slowly at small distances", self.joy_accel), 1, wx.EXPAND)
         self.joy_dz = wx.SpinCtrl(self._panel, size=(50,20))
         self.joy_dz.SetRange(0, 40)
-        self.joy_dz.SetToolTip(wx.ToolTip("The percentage of the screen corresponding to the 'center', where no movement occurs"))
-        joystick_controls.AddMany([self.joy_speed, self.joy_accel, self.joy_dz])
-        self._box.Add(joystick_controls)
+        joystick_controls.Add(label_control("Dead zone (?)", "The percentage of the screen corresponding to the 'center', where no movement occurs", self.joy_dz), 1, wx.EXPAND)
+        self._box.Add(joystick_controls, 1, wx.CENTER)
 
         joystick_buttons_box = wx.BoxSizer(wx.HORIZONTAL)
         default_joystick_button = wx.Button(self._panel, label="Default settings")
