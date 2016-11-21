@@ -192,7 +192,10 @@ class CameraThread(threading.Thread):
                 current_size  = radius
         else:
             if radius < current_size * 0.5:
-                # mouse.click(True, False)
+                if button == 'left':
+                    self.mouse.click(True, False)
+                elif button == 'right':
+                    self.mouse.click(False, True)
                 flag = False
                 current_size = self.button_size
                 std_out(button)
