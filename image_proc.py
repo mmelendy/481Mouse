@@ -170,8 +170,8 @@ class CameraThread(threading.Thread):
 
     def get_image_contour(self, image, color):
         mask = self.get_mask(image, color)
-        image = cv2.erode(mask,self.kernel,iterations = self.erode_it)
-        image = cv2.dilate(mask,self.kernel,iterations = self.dilation_it)
+        mask = cv2.erode(mask,self.kernel,iterations = self.erode_it)
+        mask = cv2.dilate(mask,self.kernel,iterations = self.dilation_it)
 
         contour = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
                                     cv2.CHAIN_APPROX_SIMPLE)[-2]
