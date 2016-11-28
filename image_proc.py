@@ -10,7 +10,7 @@ import colors
 from mouse import BasicController, JoystickController
 
 def std_out(value):
-    return
+    #return
     print value
     sys.stdout.flush()
 
@@ -70,7 +70,6 @@ class CameraThread(threading.Thread):
         while not self._want_abort.isSet():
 
             if self._want_color_change == 1:
-                std_out("while loop want to change color")
                 self.camera_color = self.new_color
                 self._want_color_change = 0
                 color = self.set_color(self.camera_color)
@@ -191,6 +190,7 @@ class CameraThread(threading.Thread):
                 flag = True
                 current_size  = radius
         else:
+            std_out("Possible button")
             if radius < current_size * 0.5:
                 if button == 'left':
                     self.mouse.click(True, False)
@@ -202,6 +202,7 @@ class CameraThread(threading.Thread):
             else:
                 current_size = radius
 
+
         return current_size, flag
 
     def enclosing_circle(self, contour):
@@ -210,14 +211,11 @@ class CameraThread(threading.Thread):
         return max_con, radius
 
     def set_color(self, color):
-        std_out("set color")
         return colors.color_dict.get(color,colors.hsv_blue)
 
     def change_color(self, color):
         self._want_color_change = 1
         self.new_color = color
-
-        std_out("change color")
 
     def set_camera(self):
         for i in reversed(xrange(5)):
@@ -228,8 +226,6 @@ class CameraThread(threading.Thread):
 
     def abort(self):
         self._want_abort.set()
-        std_out(self._want_abort.isSet())
-        std_out("set abort")
 
     def release_resources(self):
         if self._want_abort.isSet():
@@ -237,7 +233,6 @@ class CameraThread(threading.Thread):
                 cv2.destroyAllWindows()
                 cv2.VideoCapture(self.camera_num).release()
                 self._released = True
-                std_out("released")
             return True
 
         return False
@@ -382,15 +377,10 @@ class ColorFrame(wx.Frame):
             self.camera.mouse = self.camera.joystick_mouse
 
     def OnClicked(self, event):
-        std_out("Clicked Color")
-
         id = event.GetEventObject().GetId()
         self.camera.change_color(colors.color_list[id])
 
-        std_out(colors.color_list[id])
-
     def closeWindow(self, event):
-        std_out("closeWindow")
         if self.camera:
             self.camera.abort()
             self.camera.join()
