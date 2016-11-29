@@ -39,8 +39,8 @@ class CameraThread(threading.Thread):
         self.camera_color = ''
         self.new_color = ''
 
-        self.left_button_color = 'blue'
-        self.right_button_color = 'yellow'
+        self.left_button_color = 'yellow'
+        self.right_button_color = 'blue'
 
         self.button_size = 30
         self.current_l_button_size = 30
@@ -144,13 +144,18 @@ class CameraThread(threading.Thread):
 
             right_mb, right_contour = self.get_image_contour(glove, self.right_button_color)
 
+            # cv2.imshow("left", left_mb)
+            # cv2.imshow("right", right_mb)
+            # cv2.imshow("glove", glove)
+
+
             self.current_l_button_size, self.left_button_flag = \
                 self.detect_button(left_contour, self.left_button_flag, 
                                     self.current_l_button_size, 'left')
             
             self.current_r_button_size, self.right_button_flag = \
-                self.detect_button(right_contour,  self.left_button_flag, 
-                                    self.current_l_button_size, 'right')
+                self.detect_button(right_contour,  self.right_button_flag, 
+                                    self.current_r_button_size, 'right')
 
             if self.release_resources():
                 return
