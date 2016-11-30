@@ -25,8 +25,8 @@ class CameraThread(threading.Thread):
         self.cap = self.set_camera()
         self.kernel = np.ones((5,5),np.uint8)
 
-        self.erode_it = 2
-        self.dilation_it = 1
+        self.erode_it = 3
+        self.dilation_it = 2
 
         self.frame_width = self.cap.get(3)
         self.frame_height = self.cap.get(4)
@@ -42,9 +42,9 @@ class CameraThread(threading.Thread):
         self.left_button_color = 'yellow'
         self.right_button_color = 'blue'
 
-        self.button_size = 20
-        self.current_l_button_size = 20
-        self.current_r_button_size = 20
+        self.button_size = 10
+        self.current_l_button_size = 10
+        self.current_r_button_size = 10
 
         self.right_button_flag = False
         self.left_button_flag = False
@@ -103,6 +103,7 @@ class CameraThread(threading.Thread):
             # Scale x and y to between 0.0 and 1.0, and invert both: the camera
             # is rotated 180 degrees from the user, and y=0 is the bottom, not
             # the top.
+            # if not self.right_button_flag or not self.left_button_flag:
             scaled_x = center[0] / self.frame_width
             scaled_y = center[1] / self.frame_height
             self.mouse.move(1.0 - scaled_x, 1.0 - scaled_y)
@@ -140,7 +141,6 @@ class CameraThread(threading.Thread):
             cv2.circle(black, (int(x), int(y)), int(radius), (255,255,255), -1)
             glove = cv2.bitwise_and(hsv, black)
 
-            cv2.imshow("glove", glove)
 
             left_mb, left_contour = self.get_image_contour(glove, self.left_button_color)
 
@@ -202,7 +202,7 @@ class CameraThread(threading.Thread):
                 flag = True
                 current_size  = radius
         else:
-            std_out("Possible button")
+            # std_out("Possible button")
             if radius < current_size * 0.5:
                 if button == 'left':
                     self.mouse.click(True, False)
@@ -210,7 +210,7 @@ class CameraThread(threading.Thread):
                     self.mouse.click(False, True)
                 flag = False
                 current_size = self.button_size
-                std_out(button)
+                # std_out(button)
             else:
                 current_size = radius
 
