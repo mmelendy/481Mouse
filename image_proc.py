@@ -244,7 +244,7 @@ class CameraThread(threading.Thread):
 
 class ColorFrame(wx.Frame):
     def __init__(self):
-        super(ColorFrame, self).__init__(None,-1,"Color Selector",wx.Point(100,100),wx.Size(250,420))
+        super(ColorFrame, self).__init__(None,-1,"Color Selector",wx.Point(100,100),wx.Size(250,400))
         self._panel = wx.Panel(self)
         self._box = wx.BoxSizer(wx.VERTICAL)
 
@@ -253,6 +253,7 @@ class ColorFrame(wx.Frame):
         self.createDisplay()
         self.default_margins()
         self.default_joystick()
+        self.setController()
 
         self._panel.SetSizer(self._box)
         self.Center()
@@ -265,19 +266,31 @@ class ColorFrame(wx.Frame):
 
         counter = 0
         for color in colors.color_list:
-            btn = wx.Button(self._panel,counter,'')
+            btn = wx.Button(self._panel, counter, '')
             btn.SetBackgroundColour(color)
             self._box.Add(btn,1,wx.ALIGN_CENTER)
             btn.Bind(wx.EVT_BUTTON,self.OnClicked)
             counter += 1
 
+        # Controller selection
         self.rb1 = wx.RadioButton(self._panel, label="Mouse mode", style=wx.RB_GROUP)
-        self._box.Add(self.rb1, 1, wx.ALIGN_CENTER)
         self.rb1.Bind(wx.EVT_RADIOBUTTON, self.setController)
+        self.rb2 = wx.RadioButton(self._panel, label="Joystick mode")
+        self.rb2.Bind(wx.EVT_RADIOBUTTON, self.setController)
 
+        rb_box = wx.BoxSizer(wx.HORIZONTAL)
+        rb_box.AddStretchSpacer()
+        rb_box.Add(self.rb1, 1, wx.ALIGN_CENTER)
+        rb_box.AddStretchSpacer()
+        rb_box.Add(self.rb2, 1, wx.ALIGN_CENTER)
+        rb_box.AddStretchSpacer()
+        self._box.Add(rb_box)
+
+        # Mouse controller settings
+        self.mouse_box = wx.BoxSizer(wx.VERTICAL)
         corner_label = wx.StaticText(self._panel, -1, label="Corner coordinates (?)", style=wx.ALIGN_CENTER)
         corner_label.SetToolTip(wx.ToolTip("Coordinates are given as percentage offsets from the bottom and left of the screen. These corners define the shape and size of the space across which your hand needs to move to reach the corners and edges of the screen."))
-        self._box.Add(corner_label, 0, wx.CENTER)
+        self.mouse_box.Add(corner_label, 0, wx.CENTER)
 
         self.corners = []
 
@@ -304,21 +317,24 @@ class ColorFrame(wx.Frame):
         bottom_row.AddStretchSpacer()
         bottom_row.Add(br)
 
-        self._box.Add(top_row, flag=wx.EXPAND)
-        self._box.AddSpacer(20, 5)
-        self._box.Add(bottom_row, flag=wx.EXPAND)
+        self.mouse_box.Add(top_row, flag=wx.EXPAND)
+        self.mouse_box.AddSpacer(20, 5)
+        self.mouse_box.Add(bottom_row, flag=wx.EXPAND)
 
-        margin_buttons_box = wx.BoxSizer(wx.HORIZONTAL)
         default_margin_button = wx.Button(self._panel, label="Default margins")
         default_margin_button.Bind(wx.EVT_BUTTON, self.default_margins)
         apply_margin_button = wx.Button(self._panel, label="Apply changes")
         apply_margin_button.Bind(wx.EVT_BUTTON, self.update_margin)
-        margin_buttons_box.AddMany([default_margin_button, apply_margin_button])
-        self._box.Add(margin_buttons_box, 1, wx.ALIGN_RIGHT)
 
-        self.rb2 = wx.RadioButton(self._panel, label="Joystick mode")
-        self._box.Add(self.rb2, 1, wx.ALIGN_CENTER)
-        self.rb2.Bind(wx.EVT_RADIOBUTTON, self.setController)
+        margin_buttons_box = wx.BoxSizer(wx.HORIZONTAL)
+        margin_buttons_box.Add(default_margin_button, 1)
+        margin_buttons_box.Add(apply_margin_button, 1)
+        self.mouse_box.Add(margin_buttons_box, 0, wx.EXPAND)
+
+        self._box.Add(self.mouse_box, 1, wx.EXPAND)
+
+        # Joystick controller settings
+        self.joystick_box = wx.BoxSizer(wx.VERTICAL)
 
         def label_control(text, tooltip, ctrl):
             sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -340,15 +356,21 @@ class ColorFrame(wx.Frame):
         self.joy_dz = wx.SpinCtrl(self._panel, size=(50,20))
         self.joy_dz.SetRange(0, 40)
         joystick_controls.Add(label_control("Dead zone (?)", "The percentage of the screen corresponding to the 'center', where no movement occurs", self.joy_dz), 1, wx.EXPAND)
-        self._box.Add(joystick_controls, 1, wx.CENTER)
+        self.joystick_box.Add(joystick_controls, 0, wx.CENTER)
+
+        # Sort of gross hard-coded space to make the two panels equally tall.
+        self.joystick_box.AddSpacer((5,16))
 
         joystick_buttons_box = wx.BoxSizer(wx.HORIZONTAL)
         default_joystick_button = wx.Button(self._panel, label="Default settings")
         default_joystick_button.Bind(wx.EVT_BUTTON, self.default_joystick)
         apply_joystick_button = wx.Button(self._panel, label="Apply changes")
         apply_joystick_button.Bind(wx.EVT_BUTTON, self.apply_joystick)
-        joystick_buttons_box.AddMany([default_joystick_button, apply_joystick_button])
-        self._box.Add(joystick_buttons_box, 1, wx.ALIGN_RIGHT)
+        joystick_buttons_box.Add(default_joystick_button, 1)
+        joystick_buttons_box.Add(apply_joystick_button, 1)
+        self.joystick_box.Add(joystick_buttons_box, 0, wx.EXPAND)
+
+        self._box.Add(self.joystick_box, 1, wx.EXPAND)
 
     def default_margins(self, event=None):
         default_corners = [10,80, 70,70, 80,10, 10,10]
@@ -375,11 +397,16 @@ class ColorFrame(wx.Frame):
         self.camera.joystick_mouse.acceleration = self.joy_accel.GetValue()
         self.camera.joystick_mouse.dead_zone = self.joy_dz.GetValue() / 100.0
 
-    def setController(self, event):
+    def setController(self, event=None):
         if self.rb1.GetValue():
             self.camera.mouse = self.camera.basic_mouse
+            self.mouse_box.ShowItems(True)
+            self.joystick_box.ShowItems(False)
         else:
             self.camera.mouse = self.camera.joystick_mouse
+            self.mouse_box.ShowItems(False)
+            self.joystick_box.ShowItems(True)
+        self._box.Layout()
 
     def OnClicked(self, event):
         std_out("Clicked Color")
