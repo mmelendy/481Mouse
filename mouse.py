@@ -1,5 +1,6 @@
 from pymouse import PyMouse
 import numpy as np
+from collections import deque
 import sys
 
 class MouseController:
@@ -19,7 +20,7 @@ debug_output = False
 
 class BasicController(MouseController):
     def __init__(self):
-        self.last_pos = (0, 0)
+        self.positions = deque(maxlen=4)
         self.p0 = None
         self.p1 = None
         self.p2 = None
@@ -88,15 +89,19 @@ class BasicController(MouseController):
         x = int(width * u)
         y = int(height * (1.0 - v))
 
-        self.last_pos = (x, y)
+        self.positions.append(np.array([x, y]))
+        x, y = self.avg_pos()
         mouse.move(x, y)
 
     def click(self, left, right):
-        x, y = self.last_pos
+        x, y = self.avg_pos()
         if left:
             mouse.click(x, y, 1)
         if right:
             mouse.click(x, y, 2)
+
+    def avg_pos(self):
+        return sum(p for p in self.positions) / len(self.positions)
 
 class JoystickController(MouseController):
     def __init__(self):

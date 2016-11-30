@@ -10,7 +10,7 @@ import colors
 from mouse import BasicController, JoystickController
 
 def std_out(value):
-    return
+    #return
     print value
     sys.stdout.flush()
 
@@ -25,8 +25,8 @@ class CameraThread(threading.Thread):
         self.cap = self.set_camera()
         self.kernel = np.ones((5,5),np.uint8)
 
-        self.erode_it = 2
-        self.dilation_it = 1
+        self.erode_it = 3
+        self.dilation_it = 2
 
         self.frame_width = self.cap.get(3)
         self.frame_height = self.cap.get(4)
@@ -39,12 +39,12 @@ class CameraThread(threading.Thread):
         self.camera_color = ''
         self.new_color = ''
 
-        self.left_button_color = 'blue'
-        self.right_button_color = 'yellow'
+        self.left_button_color = 'yellow'
+        self.right_button_color = 'blue'
 
-        self.button_size = 30
-        self.current_l_button_size = 30
-        self.current_r_button_size = 30
+        self.button_size = 10
+        self.current_l_button_size = 10
+        self.current_r_button_size = 10
 
         self.right_button_flag = False
         self.left_button_flag = False
@@ -70,7 +70,6 @@ class CameraThread(threading.Thread):
         while not self._want_abort.isSet():
 
             if self._want_color_change == 1:
-                std_out("while loop want to change color")
                 self.camera_color = self.new_color
                 self._want_color_change = 0
                 color = self.set_color(self.camera_color)
@@ -100,14 +99,15 @@ class CameraThread(threading.Thread):
                 continue
             center = (int(moments["m10"] / moments["m00"]),
                       int(moments["m01"] / moments["m00"]))
-
-
+            
             # Scale x and y to between 0.0 and 1.0, and invert both: the camera
             # is rotated 180 degrees from the user, and y=0 is the bottom, not
             # the top.
+            # if not self.right_button_flag or not self.left_button_flag:
             scaled_x = center[0] / self.frame_width
             scaled_y = center[1] / self.frame_height
             self.mouse.move(1.0 - scaled_x, 1.0 - scaled_y)
+
 
 
             circles = []
@@ -141,17 +141,28 @@ class CameraThread(threading.Thread):
             cv2.circle(black, (int(x), int(y)), int(radius), (255,255,255), -1)
             glove = cv2.bitwise_and(hsv, black)
 
+
             left_mb, left_contour = self.get_image_contour(glove, self.left_button_color)
 
             right_mb, right_contour = self.get_image_contour(glove, self.right_button_color)
+
+
+            # cv2.imshow("left", left_mb)
+            # cv2.imshow("right", right_mb)
+            # cv2.imshow("glove", glove)
+
 
             self.current_l_button_size, self.left_button_flag = \
                 self.detect_button(left_contour, self.left_button_flag, 
                                     self.current_l_button_size, 'left')
             
             self.current_r_button_size, self.right_button_flag = \
-                self.detect_button(right_contour,  self.left_button_flag, 
-                                    self.current_l_button_size, 'right')
+                self.detect_button(right_contour,  self.right_button_flag, 
+                                    self.current_r_button_size, 'right')
+
+
+
+
 
             if self.release_resources():
                 return
@@ -191,6 +202,7 @@ class CameraThread(threading.Thread):
                 flag = True
                 current_size  = radius
         else:
+            # std_out("Possible button")
             if radius < current_size * 0.5:
                 if button == 'left':
                     self.mouse.click(True, False)
@@ -198,9 +210,10 @@ class CameraThread(threading.Thread):
                     self.mouse.click(False, True)
                 flag = False
                 current_size = self.button_size
-                std_out(button)
+                # std_out(button)
             else:
                 current_size = radius
+
 
         return current_size, flag
 
@@ -210,14 +223,11 @@ class CameraThread(threading.Thread):
         return max_con, radius
 
     def set_color(self, color):
-        std_out("set color")
         return colors.color_dict.get(color,colors.hsv_blue)
 
     def change_color(self, color):
         self._want_color_change = 1
         self.new_color = color
-
-        std_out("change color")
 
     def set_camera(self):
         for i in reversed(xrange(5)):
@@ -228,8 +238,6 @@ class CameraThread(threading.Thread):
 
     def abort(self):
         self._want_abort.set()
-        std_out(self._want_abort.isSet())
-        std_out("set abort")
 
     def release_resources(self):
         if self._want_abort.isSet():
@@ -237,7 +245,6 @@ class CameraThread(threading.Thread):
                 cv2.destroyAllWindows()
                 cv2.VideoCapture(self.camera_num).release()
                 self._released = True
-                std_out("released")
             return True
 
         return False
@@ -409,15 +416,10 @@ class ColorFrame(wx.Frame):
         self._box.Layout()
 
     def OnClicked(self, event):
-        std_out("Clicked Color")
-
         id = event.GetEventObject().GetId()
         self.camera.change_color(colors.color_list[id])
 
-        std_out(colors.color_list[id])
-
     def closeWindow(self, event):
-        std_out("closeWindow")
         if self.camera:
             self.camera.abort()
             self.camera.join()
