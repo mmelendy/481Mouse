@@ -306,7 +306,6 @@ class ColorFrame(wx.Frame):
             corner_box = wx.BoxSizer(wx.HORIZONTAL)
             for x in xrange(2):
                 c = wx.SpinCtrl(self._panel, size=(50,20))
-                c.SetRange(0, 100)
                 corner_box.Add(c)
                 self.corners.append(c)
             return corner_box
@@ -314,6 +313,10 @@ class ColorFrame(wx.Frame):
         tr = make_corner()
         br = make_corner()
         bl = make_corner()
+
+        default_ranges = [(0,49), (51,100), (51,100), (51,100), (51,100), (0,49), (0,49), (0,49)]
+        for i in range(len(self.corners)):
+            self.corners[i].SetRange(default_ranges[i][0], default_ranges[i][1])
 
         top_row = wx.BoxSizer(wx.HORIZONTAL)
         top_row.Add(tl, 0)
