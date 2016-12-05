@@ -258,6 +258,7 @@ class ColorFrame(wx.Frame):
         self.camera = CameraThread()
 
         self.createDisplay()
+        self.rb1.SetValue(True)
         self.default_margins()
         self.default_joystick()
         self.setController()
