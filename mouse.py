@@ -30,13 +30,17 @@ class ExternalMouseMovement(PyMouseEvent):
 
     def move(self, x, y):
         # Disable mouse movement for a period if we detect external movement
+        self.disable()
+
+    def disable(self):
         self.active = False
         self.timer.cancel()
-        self.timer = Timer(2.0, self.reenable)
+        self.timer = Timer(2.0, self.enable)
         self.timer.start()
 
-    def reenable(self):
+    def enable(self):
         self.active = True
+        self.timer.cancel()
 
     def is_active(self):
         return self.active
