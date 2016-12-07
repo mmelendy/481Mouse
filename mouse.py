@@ -1,7 +1,8 @@
-from pymouse import PyMouse
+from pymouse import PyMouse, PyMouseEvent
 import numpy as np
 from collections import deque
 import sys
+from threading import Thread, Timer
 
 class MouseController:
     # Moves the mouse. x and y are floats from 0 to 1.
@@ -15,8 +16,32 @@ class MouseController:
 mouse = PyMouse()
 width, height = mouse.screen_size()
 
-# Set to True to make controllers output useful information.
-debug_output = False
+# Detects when the mouse is moved. is_active() returns true iff the mouse
+# hasn't been moved recently. Use this to let the user override the CV.
+class ExternalMouseMovement(PyMouseEvent):
+    def __init__(self):
+        PyMouseEvent.__init__(self)
+        self.active = True
+        self.timer = Timer(0.0, lambda: None)
+
+        # Start tracking the mouse when the object is initialized.
+        thread = Thread(target=self.run)
+        thread.start()
+
+    def move(self, x, y):
+        # Disable mouse movement for a period if we detect external movement
+        self.active = False
+        self.timer.cancel()
+        self.timer = Timer(2.0, self.reenable)
+        self.timer.start()
+
+    def reenable(self):
+        self.active = True
+
+    def is_active(self):
+        return self.active
+
+external_movement_detector = ExternalMouseMovement()
 
 class BasicController(MouseController):
     def __init__(self):
@@ -30,7 +55,6 @@ class BasicController(MouseController):
         self.n2 = None
         self.n3 = None
         self.set_margin(((0.0, 1.0), (1.0, 1.0), (1.0, 0.0), (0.0, 0.0)))
-        self.frames = 0
 
     # Margin is a 4-tuple of pairs of floats in the order top-left, top-right,
     # bottom-right, bottom-left. Each (x,y) pair represents a corner of the
@@ -62,6 +86,9 @@ class BasicController(MouseController):
         self.n3 = normalize(ccw(self.p3 - self.p2))
 
     def move(self, x, y):
+        if not external_movement_detector.is_active():
+            return
+
         # Map hand space onto screen space. Algorithm from StackExchange.
         # http://math.stackexchange.com/questions/13404/mapping-irregular-quadrilateral-to-a-rectangle/104595#104595
         p = np.array([x, y])
@@ -74,17 +101,6 @@ class BasicController(MouseController):
         dv1 = np.dot((p - self.p3), self.n3)
         v = dv0 / (dv0 + dv1)
 
-        if debug_output:
-            self.frames += 1
-            if (self.frames >= 50):
-                print 'corners: ', self.p3, self.p2, self.p1, self.p0
-                print 'p: ', p
-                print 'du0, du1, u: ', du0, du1, u
-                print 'dv0, dv1, v: ', dv0, dv1, v
-                print
-                sys.stdout.flush()
-                self.frames = 0
-
         # Map from 0-1 onto actual screen dimensions.
         x = int(width * u)
         y = int(height * (1.0 - v))
@@ -94,6 +110,9 @@ class BasicController(MouseController):
         mouse.move(x, y)
 
     def click(self, left, right):
+        if not external_movement_detector.is_active():
+            return
+
         x, y = self.avg_pos()
         if left:
             mouse.click(x, y, 1)
@@ -106,7 +125,6 @@ class BasicController(MouseController):
 class JoystickController(MouseController):
     def __init__(self):
         self.last_uv = (0.5, 0.5)
-        self.frames = 0
 
         # The origin is the center of the hand space, where no movement occurs.
         self.origin = np.array([0.5, 0.5])
@@ -122,6 +140,9 @@ class JoystickController(MouseController):
         self.acceleration = 1.0
 
     def move(self, x, y):
+        if not external_movement_detector.is_active():
+            return
+
         p = np.array([x, y])
 
         vec = p - self.origin
@@ -146,21 +167,12 @@ class JoystickController(MouseController):
 
             self.last_pos = (x, y)
 
-            if debug_output:
-                self.frames += 1
-                if self.frames >= 50:
-                    print 'p: ', p
-                    print 'r, distance: ', r, distance
-                    print 'vec: ', vec
-                    print 'last pos: ', self.last_pos
-                    print 'x, y: ', x, y
-                    print
-                    sys.stdout.flush()
-                    self.frames = 0
-
             mouse.move(x, y)
 
     def click(self, left, right):
+        if not external_movement_detector.is_active():
+            return
+
         x, y = self.last_pos
         if left:
             mouse.click(x, y, 1)
