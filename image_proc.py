@@ -7,7 +7,7 @@ import threading
 import math
 
 import colors
-from mouse import BasicController, JoystickController
+from mouse import BasicController, JoystickController, external_movement_detector
 
 def std_out(value):
     #return
@@ -428,6 +428,7 @@ class ColorFrame(wx.Frame):
             self.camera.abort()
             self.camera.join()
         event.Skip()
+        external_movement_detector.stop()
 
 class ColorApp(wx.App):
     def OnInit(self):
