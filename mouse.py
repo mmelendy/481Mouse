@@ -18,11 +18,13 @@ width, height = mouse.screen_size()
 
 # Detects when the mouse is moved. is_active() returns true iff the mouse
 # hasn't been moved recently. Use this to let the user override the CV.
+# Call intend() before moving the mouse with PyMouse.
 class ExternalMouseMovement(PyMouseEvent):
     def __init__(self):
         PyMouseEvent.__init__(self)
         self.active = True
         self.timer = Timer(0.0, lambda: None)
+        self.intended_move = False
 
         # Start tracking the mouse when the object is initialized.
         thread = Thread(target=self.run)
@@ -30,20 +32,32 @@ class ExternalMouseMovement(PyMouseEvent):
 
     def move(self, x, y):
         # Disable mouse movement for a period if we detect external movement
-        self.disable()
+        if self.intended_move:
+            self.intended_move = False
+        else:
+            self.disable()
 
     def disable(self):
+        print "disabling"
+        sys.stdout.flush()
+
         self.active = False
         self.timer.cancel()
         self.timer = Timer(2.0, self.enable)
         self.timer.start()
 
     def enable(self):
+        print "enabling"
+        sys.stdout.flush()
+
         self.active = True
         self.timer.cancel()
 
     def is_active(self):
         return self.active
+
+    def intend(self):
+        self.intended_click = True
 
 external_movement_detector = ExternalMouseMovement()
 
@@ -120,6 +134,8 @@ class BasicController(MouseController):
 
         self.positions.append(np.array([x, y]))
         x, y = self.avg_pos()
+
+        external_movement_detector.intend()
         mouse.move(x, y)
 
         return True
@@ -156,7 +172,7 @@ class JoystickController(MouseController):
 
     def move(self, x, y):
         if not external_movement_detector.is_active():
-            return
+            return False
 
         p = np.array([x, y])
 
@@ -182,6 +198,7 @@ class JoystickController(MouseController):
 
             self.last_pos = (x, y)
 
+            external_movement_detector.intend()
             mouse.move(x, y)
             return True
         return False
