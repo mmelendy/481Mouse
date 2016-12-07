@@ -57,7 +57,7 @@ class ExternalMouseMovement(PyMouseEvent):
         return self.active
 
     def intend(self):
-        self.intended_click = True
+        self.intended_move = True
 
 external_movement_detector = ExternalMouseMovement()
 
