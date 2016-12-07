@@ -2,6 +2,9 @@ don't use values too far from current mouse position
 mouse clicking more accurate
 don't move when trying to click
 convert to exe
-clean up gui
 new paint brightish green/purple
 paint bigger area for right click
+
+start in mouse mode always
+overlay for joystick mode
+bigger interface items

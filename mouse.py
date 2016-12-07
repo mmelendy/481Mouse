@@ -108,10 +108,21 @@ class BasicController(MouseController):
         # Map from 0-1 onto actual screen dimensions.
         x = int(width * u)
         y = int(height * (1.0 - v))
+        if self.positions:
+            x0, y0 = self.avg_pos()
+            if abs(x0 - x) > 0.5 * width or abs(y0 - y) > 0.5 * height:
+                self.positions.append(np.array([x, y]))
+                x, y = self.avg_pos()
+                mouse.move(x, y)
+                print 'false'
+                sys.stdout.flush()
+                return False
 
         self.positions.append(np.array([x, y]))
         x, y = self.avg_pos()
         mouse.move(x, y)
+
+        return True
 
     def click(self, left, right):
         if not external_movement_detector.is_active():
@@ -172,6 +183,8 @@ class JoystickController(MouseController):
             self.last_pos = (x, y)
 
             mouse.move(x, y)
+            return True
+        return False
 
     def click(self, left, right):
         if not external_movement_detector.is_active():
