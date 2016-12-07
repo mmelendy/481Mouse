@@ -39,8 +39,8 @@ class CameraThread(threading.Thread):
         self.camera_color = ''
         self.new_color = ''
 
-        self.left_button_color = 'yellow'
-        self.right_button_color = 'blue'
+        self.left_button_color = None
+        self.right_button_color = None
 
         self.button_size = 10
         self.current_l_button_size = 10
@@ -63,6 +63,8 @@ class CameraThread(threading.Thread):
                 self.camera_color = self.new_color
                 self._want_color_change = 0
                 color = self.set_color(self.camera_color)
+                #but = "lmb: ", self.left_button_color, "  rmb: ", self.right_button_color
+                #std_out(but)
             if self._want_abort.isSet():
                 break
 
@@ -73,6 +75,8 @@ class CameraThread(threading.Thread):
                 self.camera_color = self.new_color
                 self._want_color_change = 0
                 color = self.set_color(self.camera_color)
+                #but = "lmb: ", self.left_button_color, "  rmb: ", self.right_button_color
+                #std_out(but)
 
             ret, img = self.cap.read()
             hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -223,7 +227,9 @@ class CameraThread(threading.Thread):
         return max_con, radius
 
     def set_color(self, color):
-        return colors.color_dict.get(color,colors.hsv_blue)
+        self.left_button_color = colors.lmb_dict.get(color, 'yellow')
+        self.right_button_color = colors.rmb_dict.get(color, 'green')
+        return colors.color_dict.get(color,colors.hsv_cyan)
 
     def change_color(self, color):
         self._want_color_change = 1
