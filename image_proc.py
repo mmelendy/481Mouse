@@ -42,9 +42,9 @@ class CameraThread(threading.Thread):
         self.left_button_color = None
         self.right_button_color = None
 
-        self.button_size = 10
-        self.current_l_button_size = 10
-        self.current_r_button_size = 10
+        self.button_size = 15
+        self.current_l_button_size = 15
+        self.current_r_button_size = 15
 
         self.right_button_flag = False
         self.left_button_flag = False
@@ -113,8 +113,6 @@ class CameraThread(threading.Thread):
             
             if not self.mouse.move(1.0 - scaled_x, 1.0 - scaled_y):
                 continue
-
-
 
             circles = []
             for con in contours:
@@ -218,7 +216,7 @@ class CameraThread(threading.Thread):
                 current_size = self.button_size
                 # std_out(button)
             else:
-                current_size = radius
+                current_size = max(radius, self.button_size)
 
 
         return current_size, flag

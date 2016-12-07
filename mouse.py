@@ -90,14 +90,14 @@ class BasicController(MouseController):
         y = int(height * (1.0 - v))
         if self.positions:
             x0, y0 = self.avg_pos()
-            if abs(x0 - x) > 0.5 * width:
-                print 'false x'
+            if abs(x0 - x) > 0.5 * width or abs(y0 - y) > 0.5 * height:
+                self.positions.append(np.array([x, y]))
+                x, y = self.avg_pos()
+                mouse.move(x, y)
+                print 'false'
                 sys.stdout.flush()
                 return False
-            if abs(y0 - y) > 0.5 * height:
-                print 'false y'
-                sys.stdout.flush()
-                return False
+
         self.positions.append(np.array([x, y]))
         x, y = self.avg_pos()
         mouse.move(x, y)
