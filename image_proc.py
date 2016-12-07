@@ -106,7 +106,9 @@ class CameraThread(threading.Thread):
             # if not self.right_button_flag or not self.left_button_flag:
             scaled_x = center[0] / self.frame_width
             scaled_y = center[1] / self.frame_height
-            self.mouse.move(1.0 - scaled_x, 1.0 - scaled_y)
+            
+            if not self.mouse.move(1.0 - scaled_x, 1.0 - scaled_y):
+                continue
 
 
 
