@@ -278,13 +278,13 @@ class ColorFrame(wx.Frame):
         self._box.Add(color_label, 0, wx.CENTER)
         self._box.AddSpacer((25,5))
 
-        counter = 0
+        self.color_buttons = []
         for color in colors.color_list:
-            btn = wx.Button(self._panel, counter, '')
+            btn = wx.Button(self._panel, len(self.color_buttons), '')
             btn.SetBackgroundColour(color)
+            self.color_buttons.append(btn)
             self._box.Add(btn,1,wx.ALIGN_CENTER)
             btn.Bind(wx.EVT_BUTTON,self.SelectColor)
-            counter += 1
 
         # Controller selection
         self.rb1 = wx.RadioButton(self._panel, label="Mouse mode", style=wx.RB_GROUP)
@@ -427,6 +427,9 @@ class ColorFrame(wx.Frame):
 
     def SelectColor(self, event):
         id = event.GetEventObject().GetId()
+        for btn in self.color_buttons:
+            btn.SetLabel("")
+        event.GetEventObject().SetLabel("Selected")
         self.camera.change_color(colors.color_list[id])
 
         # Start tracking right after the user clicks, without making them wait
