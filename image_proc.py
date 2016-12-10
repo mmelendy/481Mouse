@@ -303,7 +303,7 @@ class ColorFrame(wx.Frame):
         # Mouse controller settings
         self.mouse_box = wx.BoxSizer(wx.VERTICAL)
         corner_label = wx.StaticText(self._panel, -1, label="Corner coordinates (?)", style=wx.ALIGN_CENTER)
-        corner_label.SetToolTip(wx.ToolTip("Coordinates are given as percentage offsets from the bottom and left of the screen. These corners define the shape and size of the space across which your hand needs to move to reach the corners and edges of the screen."))
+        corner_label.SetToolTip(wx.ToolTip("Each of the four (x,y) coordinate pairs is given as percentage offsets from the bottom and left of the camera's image. These corners define the shape and size of the space across which your hand needs to move to reach the corners and edges of the screen."))
         self.mouse_box.Add(corner_label, 0, wx.CENTER)
 
         self.corners = []
