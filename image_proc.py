@@ -26,7 +26,7 @@ class CameraThread(threading.Thread):
         self.kernel = np.ones((5,5),np.uint8)
 
         self.erode_it = 3
-        self.dilation_it = 3
+        self.dilation_it = 2
 
         self.frame_width = self.cap.get(3)
         self.frame_height = self.cap.get(4)
@@ -207,7 +207,7 @@ class CameraThread(threading.Thread):
                 current_size  = radius
         else:
             # std_out("Possible button")
-            if radius < current_size * 0.7:
+            if radius < current_size * 0.6:
                 if button == 'left':
                     self.mouse.click(True, False)
                 elif button == 'right':
