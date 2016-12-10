@@ -28,14 +28,14 @@ color_dict = {
 }
 
 lmb_dict = {
-    'yellow' : 'green'
+    'yellow' : 'green',
     'green' : 'yellow',
     'cyan' : 'yellow', 
     'purple' : 'yellow'
 }
 
 rmb_dict = {
-    'yellow' : 'purple'
+    'yellow' : 'purple',
     'green' : 'purple',
     'cyan' : 'blue', 
     'purple' : 'green'
