@@ -57,7 +57,7 @@ external_movement_detector = ExternalMouseMovement()
 
 class BasicController(MouseController):
     def __init__(self):
-        self.positions = deque(maxlen=4)
+        self.positions = deque(maxlen=6)
         self.p0 = None
         self.p1 = None
         self.p2 = None
@@ -122,8 +122,6 @@ class BasicController(MouseController):
                 self.positions.append(np.array([x, y]))
                 x, y = self.avg_pos()
                 mouse.move(x, y)
-                print 'false'
-                sys.stdout.flush()
                 return False
 
         self.positions.append(np.array([x, y]))
