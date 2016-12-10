@@ -38,18 +38,12 @@ class ExternalMouseMovement(PyMouseEvent):
             self.disable()
 
     def disable(self):
-        print "disabling"
-        sys.stdout.flush()
-
         self.active = False
         self.timer.cancel()
         self.timer = Timer(2.0, self.enable)
         self.timer.start()
 
     def enable(self):
-        print "enabling"
-        sys.stdout.flush()
-
         self.active = True
         self.timer.cancel()
 
