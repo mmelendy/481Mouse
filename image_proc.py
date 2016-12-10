@@ -5,7 +5,7 @@ import wx
 import sys
 import threading
 import math
-
+from threading import Timer
 import colors
 from mouse import BasicController, JoystickController, external_movement_detector
 
@@ -283,7 +283,7 @@ class ColorFrame(wx.Frame):
             btn = wx.Button(self._panel, counter, '')
             btn.SetBackgroundColour(color)
             self._box.Add(btn,1,wx.ALIGN_CENTER)
-            btn.Bind(wx.EVT_BUTTON,self.OnClicked)
+            btn.Bind(wx.EVT_BUTTON,self.SelectColor)
             counter += 1
 
         # Controller selection
@@ -425,9 +425,14 @@ class ColorFrame(wx.Frame):
             self.joystick_box.ShowItems(True)
         self._box.Layout()
 
-    def OnClicked(self, event):
+    def SelectColor(self, event):
         id = event.GetEventObject().GetId()
         self.camera.change_color(colors.color_list[id])
+
+        # Start tracking right after the user clicks, without making them wait
+        # for the full mouse override timeout.
+        t = Timer(0.2, external_movement_detector.enable)
+        t.start()
 
     def closeWindow(self, event):
         if self.camera:
