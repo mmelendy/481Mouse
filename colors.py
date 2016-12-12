@@ -38,9 +38,9 @@ lmb_dict = {
 rmb_dict = {
     'yellow' : 'purple',
     'green' : 'purple',
-    'cyan' : 'blue', 
+    'cyan' : 'green', 
     'purple' : 'green',
     'yellow' : 'purple'
 }
 
-color_list = ['yellow', 'green', 'cyan', 'purple']
+color_list = ['yellow', 'cyan', 'purple']
