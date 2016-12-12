@@ -32,7 +32,6 @@ lmb_dict = {
     'green' : 'yellow',
     'cyan' : 'yellow', 
     'purple' : 'yellow',
-    'yellow' : 'green'
 }
 
 rmb_dict = {
