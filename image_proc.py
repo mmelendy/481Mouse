@@ -365,10 +365,10 @@ class ColorFrame(wx.Frame):
 
         joystick_controls = wx.BoxSizer(wx.VERTICAL)
         self.joy_speed = wx.SpinCtrl(self._panel, size=(50,20))
-        self.joy_speed.SetRange(1, 40)
+        self.joy_speed.SetRange(1, 20)
         joystick_controls.Add(label_control("Speed (?)", "Higher values mean the cursor moves faster", self.joy_speed), 1, wx.EXPAND)
         self.joy_accel = wx.SpinCtrl(self._panel, size=(50,20))
-        self.joy_accel.SetRange(1, 20)
+        self.joy_accel.SetRange(1, 10)
         joystick_controls.Add(label_control("Precision (?)", "Higher values mean the cursor moves more slowly at small distances", self.joy_accel), 1, wx.EXPAND)
         self.joy_dz = wx.SpinCtrl(self._panel, size=(50,20))
         self.joy_dz.SetRange(0, 40)
@@ -406,7 +406,7 @@ class ColorFrame(wx.Frame):
     def default_joystick(self, event=None):
         self.joy_speed.SetValue(8)
         self.joy_accel.SetValue(4)
-        self.joy_dz.SetValue(5)
+        self.joy_dz.SetValue(2)
         self.apply_joystick()
 
     def apply_joystick(self, event=None):

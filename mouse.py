@@ -157,6 +157,7 @@ class JoystickController(MouseController):
         self.dead_zone = 0.0
 
         # Higher speed means the mouse moves faster at all distances.
+        # Distance traveled grows faster than linearly with this value.
         self.speed = 1.0
 
         # Higher acceleration means the mouse moves *slower* for low distances.
@@ -173,7 +174,7 @@ class JoystickController(MouseController):
 
         distance = r - self.dead_zone
         if (distance > 0.0):
-            distance = distance**self.acceleration * self.speed
+            distance = distance**self.acceleration * self.speed**1.5
 
             vec /= r
             vec *= distance
