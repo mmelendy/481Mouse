@@ -369,7 +369,7 @@ class ColorFrame(wx.Frame):
         joystick_controls.Add(label_control("Speed (?)", "Higher values mean the cursor moves faster", self.joy_speed), 1, wx.EXPAND)
         self.joy_accel = wx.SpinCtrl(self._panel, size=(50,20))
         self.joy_accel.SetRange(1, 20)
-        joystick_controls.Add(label_control("Acceleration (?)", "Higher values mean the cursor moves more slowly at small distances", self.joy_accel), 1, wx.EXPAND)
+        joystick_controls.Add(label_control("Precision (?)", "Higher values mean the cursor moves more slowly at small distances", self.joy_accel), 1, wx.EXPAND)
         self.joy_dz = wx.SpinCtrl(self._panel, size=(50,20))
         self.joy_dz.SetRange(0, 40)
         joystick_controls.Add(label_control("Dead zone (?)", "The percentage of the screen corresponding to the 'center', where no movement occurs", self.joy_dz), 1, wx.EXPAND)
